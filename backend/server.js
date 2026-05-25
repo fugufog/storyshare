@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 // 中间件
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 // 路由
 app.use('/api/auth', authRoutes);
@@ -23,7 +23,7 @@ app.use('/api/admin', adminRoutes);
 
 // 前端路由 - 所有未匹配的请求返回 index.html
 app.get('/{*path}', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
 
 // 启动服务器

@@ -48,7 +48,7 @@ function updateAuthUI() {
     elements.publishSection.style.display = 'block';
     // 显示昵称，如果没有昵称则显示用户名
     elements.username.textContent = state.user.nickname || state.user.username;
-    
+
     // 管理员功能
     if (state.user.role === 'admin') {
       elements.adminSection.style.display = 'block';
@@ -70,12 +70,12 @@ async function loadPosts() {
     const storyRes = await fetch(`${API_BASE}/posts?category=story&page=${state.currentPage}&limit=${state.postsPerPage}`);
     const storyData = await storyRes.json();
     renderPosts(storyData.posts, elements.storyList, 'story');
-    
+
     // 加载短句
     const quoteRes = await fetch(`${API_BASE}/posts?category=quote&page=${state.currentPage}&limit=${state.postsPerPage}`);
     const quoteData = await quoteRes.json();
     renderPosts(quoteData.posts, elements.quoteList, 'quote');
-    
+
     // 渲染分页（使用故事的总数）
     renderPagination(storyData.pagination);
   } catch (error) {
@@ -89,7 +89,7 @@ function renderPosts(posts, container, category) {
     container.innerHTML = '<p class="empty-message">暂无内容，快来发布第一条吧！</p>';
     return;
   }
-  
+
   container.innerHTML = posts.map(post => {
     const isOwner = state.user && state.user.id === post.user_id;
     return `
@@ -112,18 +112,18 @@ function renderPosts(posts, container, category) {
 // 渲染分页
 function renderPagination(pagination) {
   const { page, totalPages } = pagination;
-  
+
   if (totalPages <= 1) {
     elements.pagination.innerHTML = '';
     return;
   }
-  
+
   let html = `
     <button ${page <= 1 ? 'disabled' : ''} onclick="goToPage(${page - 1})">上一页</button>
     <span class="page-info">第 ${page} / ${totalPages} 页</span>
     <button ${page >= totalPages ? 'disabled' : ''} onclick="goToPage(${page + 1})">下一页</button>
   `;
-  
+
   elements.pagination.innerHTML = html;
 }
 
@@ -143,15 +143,15 @@ function canDelete(post) {
 // 删除文章
 async function deletePost(id) {
   if (!confirm('确定要删除这条内容吗？')) return;
-  
+
   try {
     const res = await fetch(`${API_BASE}/posts/${id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${state.token}` }
     });
-    
+
     const data = await res.json();
-    
+
     if (res.ok) {
       alert('删除成功');
       loadPosts();
@@ -168,16 +168,16 @@ async function deletePost(id) {
 function editPost(id) {
   const postItem = document.querySelector(`.post-item[data-id="${id}"]`);
   if (!postItem) return;
-  
+
   const content = postItem.querySelector('.post-content').textContent;
-  
+
   // 获取文章分类（根据它所在的列表容器）
   const container = postItem.closest('.post-list');
   let category = 'story';
   if (container && container.id === 'quoteList') {
     category = 'quote';
   }
-  
+
   document.getElementById('editPostContent').value = content;
   document.getElementById('editPostCategory').value = category;
   document.getElementById('editPostModal').dataset.postId = id;
@@ -191,16 +191,16 @@ function bindEvents() {
   if (editForm) {
     editForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const postId = parseInt(document.getElementById('editPostModal').dataset.postId);
       const content = document.getElementById('editPostContent').value;
       const category = document.getElementById('editPostCategory').value;
-      
+
       if (!content.trim()) {
         alert('内容不能为空');
         return;
       }
-      
+
       try {
         const res = await fetch(`${API_BASE}/posts/${postId}`, {
           method: 'PUT',
@@ -210,9 +210,9 @@ function bindEvents() {
           },
           body: JSON.stringify({ content, category })
         });
-        
+
         const data = await res.json();
-        
+
         if (res.ok) {
           document.getElementById('editPostModal').classList.remove('show');
           editForm.reset();
@@ -227,7 +227,7 @@ function bindEvents() {
       }
     });
   }
-  
+
   // 关闭编辑模态框
   const editModal = document.getElementById('editPostModal');
   if (editModal) {
@@ -237,24 +237,24 @@ function bindEvents() {
       }
     });
   }
-  
+
   // 显示登录模态框
   document.getElementById('showLoginBtn').addEventListener('click', () => {
     elements.loginModal.classList.add('show');
   });
-  
+
   // 显示注册模态框
   document.getElementById('showRegisterBtn').addEventListener('click', () => {
     elements.registerModal.classList.add('show');
   });
-  
+
   // 关闭模态框
   document.querySelectorAll('.close').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.target.closest('.modal').classList.remove('show');
     });
   });
-  
+
   // 点击模态框外部关闭
   [elements.loginModal, elements.registerModal].forEach(modal => {
     modal.addEventListener('click', (e) => {
@@ -263,43 +263,43 @@ function bindEvents() {
       }
     });
   });
-  
+
   // 切换到注册
   document.getElementById('switchToRegister').addEventListener('click', (e) => {
     e.preventDefault();
     elements.loginModal.classList.remove('show');
     elements.registerModal.classList.add('show');
   });
-  
+
   // 切换到登录
   document.getElementById('switchToLogin').addEventListener('click', (e) => {
     e.preventDefault();
     elements.registerModal.classList.remove('show');
     elements.loginModal.classList.add('show');
   });
-  
+
   // 登录表单
   elements.loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
-    
+
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-      
+
       const data = await res.json();
-      
+
       if (res.ok) {
         state.token = data.token;
         state.user = data.user;
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        
+
         elements.loginModal.classList.remove('show');
         elements.loginForm.reset();
         updateAuthUI();
@@ -312,23 +312,23 @@ function bindEvents() {
       alert('登录失败，请重试');
     }
   });
-  
+
   // 注册表单
   elements.registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const username = document.getElementById('registerUsername').value;
     const password = document.getElementById('registerPassword').value;
-    
+
     try {
       const res = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-      
+
       const data = await res.json();
-      
+
       if (res.ok) {
         elements.registerModal.classList.remove('show');
         elements.registerForm.reset();
@@ -342,19 +342,19 @@ function bindEvents() {
       alert('注册失败，请重试');
     }
   });
-  
+
   // 发布表单
   elements.publishForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const content = document.getElementById('postContent').value;
     const category = document.getElementById('postCategory').value;
-    
+
     if (!content.trim()) {
       alert('内容不能为空');
       return;
     }
-    
+
     try {
       const res = await fetch(`${API_BASE}/posts`, {
         method: 'POST',
@@ -364,9 +364,9 @@ function bindEvents() {
         },
         body: JSON.stringify({ content, category })
       });
-      
+
       const data = await res.json();
-      
+
       if (res.ok) {
         elements.publishForm.reset();
         state.currentPage = 1;
@@ -385,57 +385,57 @@ function bindEvents() {
     e.stopPropagation();
     elements.profileMenu.classList.toggle('show');
   });
-  
+
   // 点击其他地方关闭下拉菜单
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.user-dropdown')) {
       elements.profileMenu.classList.remove('show');
     }
   });
-  
+
   // 显示修改密码模态框
   document.getElementById('showChangePasswordBtn').addEventListener('click', () => {
     elements.profileMenu.classList.remove('show');
     elements.changePasswordModal.classList.add('show');
   });
-  
+
   // 显示修改昵称模态框
   document.getElementById('showChangeNicknameBtn').addEventListener('click', () => {
     elements.profileMenu.classList.remove('show');
     elements.changeNicknameModal.classList.add('show');
   });
-  
+
   // 关闭修改密码模态框
   elements.changePasswordModal.addEventListener('click', (e) => {
     if (e.target === elements.changePasswordModal) {
       elements.changePasswordModal.classList.remove('show');
     }
   });
-  
+
   // 关闭修改昵称模态框
   elements.changeNicknameModal.addEventListener('click', (e) => {
     if (e.target === elements.changeNicknameModal) {
       elements.changeNicknameModal.classList.remove('show');
     }
   });
-  
+
   // 修改密码表单
   elements.changePasswordForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const oldPassword = document.getElementById('oldPassword').value;
     const newPassword = document.getElementById('newPassword').value;
-    
+
     if (!oldPassword || !newPassword) {
       alert('请填写所有字段');
       return;
     }
-    
+
     if (newPassword.length < 6) {
       alert('新密码至少6个字符');
       return;
     }
-    
+
     try {
       const res = await fetch(`${API_BASE}/auth/password`, {
         method: 'PUT',
@@ -445,9 +445,9 @@ function bindEvents() {
         },
         body: JSON.stringify({ oldPassword, newPassword })
       });
-      
+
       const data = await res.json();
-      
+
       if (res.ok) {
         alert('密码修改成功！请重新登录。');
         elements.changePasswordForm.reset();
@@ -467,23 +467,23 @@ function bindEvents() {
       alert('修改失败，请重试');
     }
   });
-  
+
   // 修改昵称表单
   elements.changeNicknameForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const nickname = document.getElementById('newNickname').value;
-    
+
     if (!nickname) {
       alert('请输入新昵称');
       return;
     }
-    
+
     if (nickname.length < 1 || nickname.length > 20) {
       alert('昵称长度需在1-20个字符之间');
       return;
     }
-    
+
     try {
       const res = await fetch(`${API_BASE}/auth/nickname`, {
         method: 'PUT',
@@ -493,15 +493,15 @@ function bindEvents() {
         },
         body: JSON.stringify({ nickname })
       });
-      
+
       const data = await res.json();
-      
+
       if (res.ok) {
         state.token = data.token;
         state.user = data.user;
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        
+
         elements.changeNicknameForm.reset();
         elements.changeNicknameModal.classList.remove('show');
         updateAuthUI();
@@ -515,7 +515,7 @@ function bindEvents() {
       alert('修改失败，请重试');
     }
   });
-  
+
   // 退出登录
   document.getElementById('logoutBtn').addEventListener('click', () => {
     elements.profileMenu.classList.remove('show');
@@ -526,27 +526,27 @@ function bindEvents() {
     updateAuthUI();
     loadPosts();
   });
-  
+
   // 显示用户管理
   document.getElementById('showUserManageBtn').addEventListener('click', () => {
     elements.userManageModal.classList.add('show');
     loadUserList();
   });
-  
+
   // 关闭用户管理模态框
   elements.userManageModal.addEventListener('click', (e) => {
     if (e.target === elements.userManageModal) {
       elements.userManageModal.classList.remove('show');
     }
   });
-  
+
   // 导出 Excel
   document.getElementById('exportBtn').addEventListener('click', async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/export`, {
         headers: { 'Authorization': `Bearer ${state.token}` }
       });
-      
+
       if (res.ok) {
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
@@ -579,12 +579,12 @@ function formatDate(dateStr) {
   const date = new Date(dateStr);
   const now = new Date();
   const diff = now - date;
-  
+
   if (diff < 60000) return '刚刚';
   if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
   if (diff < 604800000) return `${Math.floor(diff / 86400000)}天前`;
-  
+
   return date.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
@@ -601,12 +601,12 @@ async function loadUserList() {
     const res = await fetch(`${API_BASE}/admin/users`, {
       headers: { 'Authorization': `Bearer ${state.token}` }
     });
-    
+
     if (!res.ok) {
       const err = await res.json();
       throw new Error(err.error || '获取用户列表失败');
     }
-    
+
     const data = await res.json();
     renderUserList(data.users);
   } catch (error) {
@@ -621,9 +621,9 @@ function renderUserList(users) {
     elements.userManageContent.innerHTML = '<p class="loading-text">暂无用户</p>';
     return;
   }
-  
+
   const currentUserId = state.user?.id;
-  
+
   let html = `
     <div style="margin-bottom:12px;color:var(--text-light);font-size:13px;">
       共 ${users.length} 位用户（不能删除自己和其他管理员）
@@ -641,12 +641,12 @@ function renderUserList(users) {
       </thead>
       <tbody>
   `;
-  
+
   users.forEach(user => {
     const isSelf = user.id === currentUserId;
     const isAdmin = user.role === 'admin';
     const canDelete = !isSelf && !isAdmin;
-    
+
     html += `
       <tr>
         <td>${user.id}</td>
@@ -655,15 +655,15 @@ function renderUserList(users) {
         <td>${user.post_count}</td>
         <td>${formatDate(user.created_at)}</td>
         <td>
-          ${canDelete 
-            ? `<button class="delete-user-btn" onclick="deleteUser(${user.id}, '${escapeHtml(user.username)}')">删除用户</button>`
-            : `<span style="color:var(--text-light);font-size:12px;">${isSelf ? '当前账号' : '不可删除'}</span>`
-          }
+          ${canDelete
+        ? `<button class="delete-user-btn" onclick="deleteUser(${user.id}, '${escapeHtml(user.username)}')">删除用户</button>`
+        : `<span style="color:var(--text-light);font-size:12px;">${isSelf ? '当前账号' : '不可删除'}</span>`
+      }
         </td>
       </tr>
     `;
   });
-  
+
   html += '</tbody></table>';
   elements.userManageContent.innerHTML = html;
 }
@@ -671,15 +671,15 @@ function renderUserList(users) {
 // 删除用户
 async function deleteUser(id, username) {
   if (!confirm(`确定要删除用户「${username}」及其所有内容吗？此操作不可撤销！`)) return;
-  
+
   try {
     const res = await fetch(`${API_BASE}/admin/users/${id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${state.token}` }
     });
-    
+
     const data = await res.json();
-    
+
     if (res.ok) {
       alert(data.message || `用户 ${username} 已删除`);
       loadUserList();
