@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StoryShare - 分享你的故事</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="logo">StoryShare</a>
+      <div class="nav-right">
+        <span id="userInfo" class="user-info" style="display:none;">
+          <span id="username" class="user-name"></span>
+          <div class="user-dropdown">
+            <button id="profileToggle" class="btn btn-sm profile-btn">个人设置 ▾</button>
+            <div id="profileMenu" class="dropdown-menu">
+              <button id="showChangeNicknameBtn">修改昵称</button>
+              <button id="showChangePasswordBtn">修改密码</button>
+              <hr>
+              <button id="logoutBtn" class="logout-option">退出登录</button>
+            </div>
+          </div>
+        </span>
+        <div id="authButtons">
+          <button id="showLoginBtn" class="btn btn-sm">登录</button>
+          <button id="showRegisterBtn" class="btn btn-sm btn-primary">注册</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 主内容区 -->
+  <main class="container">
+    <!-- 发布区域（仅登录用户可见） -->
+    <section id="publishSection" class="publish-section" style="display:none;">
+      <h2>发布新内容</h2>
+      <form id="publishForm">
+        <div class="form-group">
+          <select id="postCategory" class="form-select">
+            <option value="story">故事</option>
+            <option value="quote">短句</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <textarea id="postContent" placeholder="写下你的故事或短句..." maxlength="500" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">发布</button>
+      </form>
+    </section>
+
+    <!-- 管理员操作区 -->
+    <section id="adminSection" class="admin-section" style="display:none;">
+      <div class="admin-tools">
+        <button id="exportBtn" class="btn btn-warning">下载所有内容为 Excel</button>
+        <button id="showUserManageBtn" class="btn btn-primary">用户管理</button>
+      </div>
+    </section>
+
+    <!-- 内容展示区 -->
+    <section class="content-section">
+      <!-- 故事板块 -->
+      <div class="board">
+        <h2 class="board-title">故事</h2>
+        <div id="storyList" class="post-list"></div>
+      </div>
+
+      <!-- 短句板块 -->
+      <div class="board">
+        <h2 class="board-title">短句</h2>
+        <div id="quoteList" class="post-list"></div>
+      </div>
+    </section>
+
+    <!-- 分页 -->
+    <div id="pagination" class="pagination"></div>
+  </main>
+
+  <!-- 登录模态框 -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>登录</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <input type="text" id="loginUsername" placeholder="用户名" required>
+        </div>
+        <div class="form-group">
+          <input type="password" id="loginPassword" placeholder="密码" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">登录</button>
+      </form>
+      <p class="modal-footer">还没有账号？<a href="#" id="switchToRegister">立即注册</a></p>
+    </div>
+  </div>
+
+  <!-- 注册模态框 -->
+  <div id="registerModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>注册</h2>
+      <form id="registerForm">
+        <div class="form-group">
+          <input type="text" id="registerUsername" placeholder="用户名（2-20个字符）" required>
+        </div>
+        <div class="form-group">
+          <input type="password" id="registerPassword" placeholder="密码（至少6个字符）" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">注册</button>
+      </form>
+      <p class="modal-footer">已有账号？<a href="#" id="switchToLogin">立即登录</a></p>
+    </div>
+  </div>
+
+  <!-- 用户管理模态框 -->
+  <div id="userManageModal" class="modal">
+    <div class="modal-content modal-lg">
+      <span class="close">&times;</span>
+      <h2>用户管理</h2>
+      <div id="userManageContent">
+        <p class="loading-text">加载中...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 修改密码模态框 -->
+  <div id="changePasswordModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>修改密码</h2>
+      <form id="changePasswordForm">
+        <div class="form-group">
+          <input type="password" id="oldPassword" placeholder="当前密码" required>
+        </div>
+        <div class="form-group">
+          <input type="password" id="newPassword" placeholder="新密码（至少6个字符）" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">确认修改</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 修改昵称模态框 -->
+  <div id="changeNicknameModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>修改昵称</h2>
+      <form id="changeNicknameForm">
+        <div class="form-group">
+          <input type="text" id="newNickname" placeholder="新昵称（1-20个字符）" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">确认修改</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 编辑文章模态框 -->
+  <div id="editPostModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>编辑内容</h2>
+      <form id="editPostForm">
+        <div class="form-group">
+          <select id="editPostCategory" class="form-select">
+            <option value="story">故事</option>
+            <option value="quote">短句</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <textarea id="editPostContent" placeholder="编辑你的内容..." maxlength="500" rows="4" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">保存修改</button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>StoryShare &copy; 2024 - 分享你的故事</p>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
