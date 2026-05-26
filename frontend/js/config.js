@@ -12,9 +12,8 @@ const API_BASE_URL = (function () {
   ) {
     return ''; // 相对路径，由后端同一端口提供服务
   }
-  // 生产环境：替换为你的阿里云后端 API 地址
-  // 例如：'https://api.yourdomain.com' 或 'https://your-server-ip:3000'
-  return 'https://your-backend-domain.com';
+  // 生产环境：阿里云后端 API 地址
+  return 'http://39.107.247.51:3000';
 })();
 
 const API_BASE = API_BASE_URL + '/api';

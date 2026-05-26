@@ -18,7 +18,7 @@ app.use(cors({
   origin: [
     'http://localhost:3000',    // 本地开发（后端自带前端）
     'http://localhost:8080',    // 本地开发（单独运行前端）
-    'https://your-site.pages.dev' // Cloudflare Pages 生产环境
+    'https://storyshare.fugufugu583.workers.dev' // Cloudflare Pages 生产环境
   ],
   credentials: true
 }));
