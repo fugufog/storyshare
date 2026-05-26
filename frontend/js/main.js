@@ -1,3 +1,6 @@
+// 正确！不用IP、不用协议、不用域名，纯相对路径
+const API_BASE = "/api";
+
 // 状态管理
 const state = {
   token: localStorage.getItem('token'),
