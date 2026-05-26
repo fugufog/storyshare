@@ -1,6 +1,3 @@
-// API 基础路径
-const API_BASE = '/api';
-
 // 状态管理
 const state = {
   token: localStorage.getItem('token'),
