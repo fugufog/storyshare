@@ -1,4 +1,4 @@
-
+var API_BASE = "";
 
 // 状态管理
 const state = {
