@@ -1,5 +1,3 @@
-// API基础路径 - 使用Cloudflare Worker代理
-const API_BASE = 'https://api-proxy.fugufugu583.workers.dev/api';
 
 // 状态管理
 const state = {
