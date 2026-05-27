@@ -1,4 +1,4 @@
-var API_BASE = "";
+const API_BASE_URL = "https://api-proxy.fugufugu583.workers.dev/";
 
 // 状态管理
 const state = {
