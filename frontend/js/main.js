@@ -1,4 +1,4 @@
-
+const API_BASE = '/api';
 
 // 状态管理
 const state = {
