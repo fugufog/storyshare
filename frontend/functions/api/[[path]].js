@@ -1,31 +1,25 @@
-// Cloudflare Pages Functions 反向代理
+// functions/api/[[path]].js
 export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
-
-  // 构造后端请求地址（你的阿里云 3000 端口）
-  const backendUrl = new URL(
-    url.pathname + url.search,
-    "http://39.107.247.51:3000"
-  );
-
-  // 转发请求到后端
-  const backendResponse = await fetch(backendUrl, {
+  
+  // 构建目标URL
+  const targetUrl = `http://39.107.247.51:3000${url.pathname.replace('/api', '')}${url.search}`;
+  
+  // 转发请求
+  const response = await fetch(targetUrl, {
     method: request.method,
     headers: request.headers,
-    body: request.body,
-    redirect: "follow",
+    body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined
   });
-
-  // 处理跨域问题
-  const headers = new Headers(backendResponse.headers);
-  headers.set("Access-Control-Allow-Origin", "*");
-  headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  headers.set("Access-Control-Allow-Headers", "*");
-
-  // 返回后端响应给前端
-  return new Response(backendResponse.body, {
-    status: backendResponse.status,
-    headers: headers,
+  
+  // 添加CORS头
+  const headers = new Headers(response.headers);
+  headers.set('Access-Control-Allow-Origin', '*');
+  
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: headers
   });
 }
