@@ -12,8 +12,8 @@ const API_BASE_URL = (function () {
   ) {
     return ''; // 相对路径，由后端同一端口提供服务
   }
-  // 生产环境：阿里云后端 API 地址
-  return 'http://39.107.247.51:3000';
+  // 生产环境：使用 Cloudflare Worker 代理
+  return 'https://api-proxy.fugufugu583.workers.dev';
 })();
 
 const API_BASE = API_BASE_URL + '/api';
