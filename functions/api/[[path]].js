@@ -42,12 +42,12 @@ export async function onRequest(context) {
   const fetchOptions = {
     method: request.method,
     headers: forwardHeaders,
-    redirect: "follow",
   };
 
   // GET/HEAD 请求不应包含 body
+  // 使用 arrayBuffer() 确保 body 数据完整转发（ReadableStream 直接传可能导致 body 丢失）
   if (request.method !== "GET" && request.method !== "HEAD") {
-    fetchOptions.body = request.body;
+    fetchOptions.body = await request.arrayBuffer();
   }
 
   try {
