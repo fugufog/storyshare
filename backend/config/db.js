@@ -72,7 +72,8 @@ async function initDB() {
     console.log('数据库初始化成功');
   } catch (error) {
     console.error('数据库初始化失败:', error.message);
-    console.log('请确保 MySQL 服务已启动并正确配置数据库连接');
+    console.error('完整错误:', error);
+    throw error; // 阻止服务器在数据库未就绪时启动
   }
 }
 

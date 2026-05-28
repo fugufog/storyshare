@@ -1,5 +1,5 @@
-// 正确！不用IP、不用协议、不用域名，纯相对路径
-const API_BASE = "/api";
+// 从 config.js 的 window 全局变量读取，避免重复 const 声明导致 SyntaxError
+var API_BASE = window.API_BASE || '/api';
 
 // 状态管理
 const state = {

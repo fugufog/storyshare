@@ -1,0 +1,14 @@
+# Cloudflare Pages 部署配置
+# 使用: npx wrangler pages deploy frontend --project-name storyshare
+
+name = "storyshare"
+compatibility_date = "2024-01-01"
+
+# Pages 配置
+[pages]
+# 构建输出目录相对于 frontend/
+# Cloudflare Pages 会自动部署 frontend/ 目录下的文件
+
+[vars]
+# 不需要在这里配置环境变量
+# Cloudflare Functions 会直接转发到阿里云后端

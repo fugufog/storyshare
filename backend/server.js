@@ -12,15 +12,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 中间件
-// CORS - 允许 Cloudflare Pages 前端访问
-// 部署到生产环境时，请将 origin 修改为你的 Cloudflare Pages 域名
+// CORS - 允许 Cloudflare Pages 前端访问（生产环境建议配置具体域名）
 app.use(cors({
-  origin: [
-    'http://localhost:3000',    // 本地开发（后端自带前端）
-    'http://localhost:8080',    // 本地开发（单独运行前端）
-    'https://storyshare.fugufugu583.workers.dev' // Cloudflare Pages 生产环境
-  ],
-  credentials: true
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 

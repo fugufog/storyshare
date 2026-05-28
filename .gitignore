@@ -1,16 +1,37 @@
-# Compiled class file
-*.class
+# Dependencies
+node_modules/
+package-lock.json
 
-# Log file
+# Environment variables (contains sensitive data)
+.env
+backend/.env
+
+# Logs
 *.log
+npm-debug.log*
+logs/
 
-# BlueJ files
-*.ctxt
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Package Files #
+# Build output
+dist/
+build/
+
+# PM2
+.pm2/
+dump.pm2
+
+# Java stuff (legacy)
+*.class
 *.jar
 *.war
 *.nar
@@ -18,7 +39,9 @@
 *.zip
 *.tar.gz
 *.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+.mtj.tmp/
 hs_err_pid*
 replay_pid*
+
+# Wrangler
+.wrangler/
