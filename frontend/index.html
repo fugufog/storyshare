@@ -10,19 +10,18 @@
   <!-- 导航栏 -->
   <nav class="navbar">
     <div class="container">
-      <a href="/" class="logo">StoryShare</a>
+      <div class="nav-left">
+        <a href="/" class="logo">StoryShare</a>
+        <div class="nav-tabs">
+          <button class="nav-tab active" data-tab="story">故事</button>
+          <button class="nav-tab" data-tab="quote">短句</button>
+          <button class="nav-tab" data-tab="profile">个人中心</button>
+          <button class="nav-tab nav-tab-admin" data-tab="users" style="display:none;">用户管理</button>
+        </div>
+      </div>
       <div class="nav-right">
         <span id="userInfo" class="user-info" style="display:none;">
           <span id="username" class="user-name"></span>
-          <div class="user-dropdown">
-            <button id="profileToggle" class="btn btn-sm profile-btn">个人设置 ▾</button>
-            <div id="profileMenu" class="dropdown-menu">
-              <button id="showChangeNicknameBtn">修改昵称</button>
-              <button id="showChangePasswordBtn">修改密码</button>
-              <hr>
-              <button id="logoutBtn" class="logout-option">退出登录</button>
-            </div>
-          </div>
         </span>
         <div id="authButtons">
           <button id="showLoginBtn" class="btn btn-sm">登录</button>
@@ -34,7 +33,7 @@
 
   <!-- 主内容区 -->
   <main class="container">
-    <!-- 发布区域（仅登录用户可见） -->
+    <!-- 发布区域 -->
     <section id="publishSection" class="publish-section" style="display:none;">
       <h2>发布新内容</h2>
       <form id="publishForm">
@@ -51,31 +50,72 @@
       </form>
     </section>
 
-    <!-- 管理员操作区 -->
-    <section id="adminSection" class="admin-section" style="display:none;">
-      <div class="admin-tools">
-        <button id="exportBtn" class="btn btn-warning">下载所有内容为 Excel</button>
-        <button id="showUserManageBtn" class="btn btn-primary">用户管理</button>
-      </div>
-    </section>
-
-    <!-- 内容展示区 -->
-    <section class="content-section">
-      <!-- 故事板块 -->
+    <!-- 故事标签页 -->
+    <section id="storySection" class="tab-content">
       <div class="board">
-        <h2 class="board-title">故事</h2>
+        <div class="board-header">
+          <h2 class="board-title">故事</h2>
+          <button id="exportStoryBtn" class="btn btn-sm btn-warning admin-only" style="display:none;">下载故事 CSV</button>
+        </div>
         <div id="storyList" class="post-list"></div>
       </div>
+      <div id="storyPagination" class="pagination"></div>
+    </section>
 
-      <!-- 短句板块 -->
+    <!-- 短句标签页 -->
+    <section id="quoteSection" class="tab-content" style="display:none;">
       <div class="board">
-        <h2 class="board-title">短句</h2>
+        <div class="board-header">
+          <h2 class="board-title">短句</h2>
+          <button id="exportQuoteBtn" class="btn btn-sm btn-warning admin-only" style="display:none;">下载短句 CSV</button>
+        </div>
         <div id="quoteList" class="post-list"></div>
+      </div>
+      <div id="quotePagination" class="pagination"></div>
+    </section>
+
+    <!-- 个人中心标签页 -->
+    <section id="profileSection" class="tab-content" style="display:none;">
+      <div class="board">
+        <h2 class="board-title">个人中心</h2>
+
+        <div class="profile-block">
+          <h3>修改昵称</h3>
+          <form id="changeNicknameForm">
+            <div class="form-group">
+              <input type="text" id="newNickname" placeholder="新昵称（1-20个字符）" required>
+            </div>
+            <button type="submit" class="btn btn-primary">确认修改</button>
+          </form>
+        </div>
+
+        <div class="profile-block">
+          <h3>修改密码</h3>
+          <form id="changePasswordForm">
+            <div class="form-group">
+              <input type="password" id="oldPassword" placeholder="当前密码" required>
+            </div>
+            <div class="form-group">
+              <input type="password" id="newPassword" placeholder="新密码（至少6个字符）" required>
+            </div>
+            <button type="submit" class="btn btn-primary">确认修改</button>
+          </form>
+        </div>
+
+        <hr class="profile-divider">
+        <button id="logoutBtn" class="btn btn-danger">退出登录</button>
       </div>
     </section>
 
-    <!-- 分页 -->
-    <div id="pagination" class="pagination"></div>
+    <!-- 用户管理标签页（管理员） -->
+    <section id="usersSection" class="tab-content" style="display:none;">
+      <div class="board">
+        <h2 class="board-title">用户管理</h2>
+        <div id="userManageContent">
+          <p class="loading-text">加载中...</p>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- 登录模态框 -->
@@ -111,48 +151,6 @@
         <button type="submit" class="btn btn-primary btn-block">注册</button>
       </form>
       <p class="modal-footer">已有账号？<a href="#" id="switchToLogin">立即登录</a></p>
-    </div>
-  </div>
-
-  <!-- 用户管理模态框 -->
-  <div id="userManageModal" class="modal">
-    <div class="modal-content modal-lg">
-      <span class="close">&times;</span>
-      <h2>用户管理</h2>
-      <div id="userManageContent">
-        <p class="loading-text">加载中...</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- 修改密码模态框 -->
-  <div id="changePasswordModal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>修改密码</h2>
-      <form id="changePasswordForm">
-        <div class="form-group">
-          <input type="password" id="oldPassword" placeholder="当前密码" required>
-        </div>
-        <div class="form-group">
-          <input type="password" id="newPassword" placeholder="新密码（至少6个字符）" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">确认修改</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- 修改昵称模态框 -->
-  <div id="changeNicknameModal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>修改昵称</h2>
-      <form id="changeNicknameForm">
-        <div class="form-group">
-          <input type="text" id="newNickname" placeholder="新昵称（1-20个字符）" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">确认修改</button>
-      </form>
     </div>
   </div>
 
