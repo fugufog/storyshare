@@ -200,7 +200,7 @@ function editPost(id) {
   document.getElementById('editPostModal').classList.add('show');
 }
 
-function downloadCategoryCSV(category) {
+function downloadCategoryExcel(category) {
   var label = category === 'story' ? '故事' : '短句';
 
   fetch(API_BASE + '/posts?category=' + category + '&limit=99999')
@@ -212,26 +212,38 @@ function downloadCategoryCSV(category) {
         return;
       }
 
-      // UTF-8 BOM + CSV 内容（Excel 可直接打开）
-      var BOM = '﻿';
-      var csv = BOM + 'ID,作者,内容,类型,发布时间\n';
-      posts.forEach(function(post) {
-        csv += post.id + ',' +
-          escapeCsv(post.username) + ',' +
-          escapeCsv(post.content) + ',' +
-          label + ',' +
-          new Date(post.created_at).toLocaleString('zh-CN') + '\n';
+      // 构建 Excel 数据，格式化时间为 yyyy-mm-dd hh:mm:ss
+      var rows = posts.map(function(post) {
+        var d = new Date(post.created_at);
+        var timeStr = d.getFullYear() + '-' +
+          pad2(d.getMonth() + 1) + '-' +
+          pad2(d.getDate()) + ' ' +
+          pad2(d.getHours()) + ':' +
+          pad2(d.getMinutes()) + ':' +
+          pad2(d.getSeconds());
+        return {
+          'ID': post.id,
+          '作者': post.username,
+          '内容': post.content,
+          '类型': label,
+          '发布时间': timeStr
+        };
       });
 
-      var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      var url = window.URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'storyshare_' + label + '_' + Date.now() + '.csv';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      var ws = XLSX.utils.json_to_sheet(rows);
+
+      // 设置列宽
+      ws['!cols'] = [
+        { wch: 6 },   // ID
+        { wch: 12 },  // 作者
+        { wch: 50 },  // 内容
+        { wch: 6 },   // 类型
+        { wch: 20 }   // 发布时间
+      ];
+
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, label);
+      XLSX.writeFile(wb, 'storyshare_' + label + '_' + Date.now() + '.xlsx');
     })
     .catch(function(error) {
       console.error('下载失败:', error);
@@ -239,13 +251,8 @@ function downloadCategoryCSV(category) {
     });
 }
 
-function escapeCsv(str) {
-  if (!str) return '';
-  // 如果包含逗号、双引号或换行，需要用双引号包裹
-  if (str.indexOf(',') !== -1 || str.indexOf('"') !== -1 || str.indexOf('\n') !== -1) {
-    return '"' + str.replace(/"/g, '""') + '"';
-  }
-  return str;
+function pad2(n) {
+  return n < 10 ? '0' + n : '' + n;
 }
 
 function bindEvents() {
@@ -262,12 +269,12 @@ function bindEvents() {
     });
   });
 
-  // CSV 下载按钮
+  // Excel 下载按钮
   elements.exportStoryBtn.addEventListener('click', function() {
-    downloadCategoryCSV('story');
+    downloadCategoryExcel('story');
   });
   elements.exportQuoteBtn.addEventListener('click', function() {
-    downloadCategoryCSV('quote');
+    downloadCategoryExcel('quote');
   });
 
   // 编辑文章表单

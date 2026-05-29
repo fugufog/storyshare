@@ -55,7 +55,7 @@
       <div class="board">
         <div class="board-header">
           <h2 class="board-title">故事</h2>
-          <button id="exportStoryBtn" class="btn btn-sm btn-warning admin-only" style="display:none;">下载故事 CSV</button>
+          <button id="exportStoryBtn" class="btn btn-sm btn-warning admin-only" style="display:none;">下载故事 Excel</button>
         </div>
         <div id="storyList" class="post-list"></div>
       </div>
@@ -67,7 +67,7 @@
       <div class="board">
         <div class="board-header">
           <h2 class="board-title">短句</h2>
-          <button id="exportQuoteBtn" class="btn btn-sm btn-warning admin-only" style="display:none;">下载短句 CSV</button>
+          <button id="exportQuoteBtn" class="btn btn-sm btn-warning admin-only" style="display:none;">下载短句 Excel</button>
         </div>
         <div id="quoteList" class="post-list"></div>
       </div>
@@ -178,6 +178,7 @@
     <p>StoryShare &copy; 2024 - 分享你的故事</p>
   </footer>
 
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/main.js"></script>
 </body>
