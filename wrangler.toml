@@ -6,8 +6,7 @@ compatibility_date = "2024-01-01"
 
 # Pages 配置
 [pages]
-# 构建输出目录相对于 frontend/
-# Cloudflare Pages 会自动部署 frontend/ 目录下的文件
+pages_build_output_dir = "frontend"
 
 [vars]
 # 不需要在这里配置环境变量
