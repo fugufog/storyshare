@@ -13,7 +13,7 @@ window.API_BASE_URL = (function () {
     return ''; // 本地开发保持相对路径
   }
   // 生产环境直接请求 Cloudflare Tunnel
-  return 'https://judge-minimum-assuming-trust.trycloudflare.com';
+  return 'https://weekly-debian-outlined-patterns.trycloudflare.com';
 })();
 
 window.API_BASE = window.API_BASE_URL + '/api';
