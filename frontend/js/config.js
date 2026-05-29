@@ -6,15 +6,14 @@
 
 // 全局 API 基础路径（使用 window 挂载，避免与 main.js 中的 const 声明冲突）
 window.API_BASE_URL = (function () {
-  // 如果当前页面在 localhost 运行，使用相对路径（开发模式，通过 Cloudflare Functions 代理）
   if (
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1'
   ) {
-    return ''; // 相对路径，由 Cloudflare Functions 或后端同一端口提供服务
+    return ''; // 本地开发保持相对路径
   }
-  // 生产环境（Cloudflare Pages）：使用相对路径，Cloudflare Functions 反向代理到阿里云后端
-  return ''; // 相对路径，Cloudflare Functions 自动拦截 /api/* 并代理
+  // 生产环境直接请求 Cloudflare Tunnel
+  return 'https://judge-minimum-assuming-trust.trycloudflare.com';
 })();
 
 window.API_BASE = window.API_BASE_URL + '/api';
