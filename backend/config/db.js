@@ -46,8 +46,25 @@ async function initDB() {
         username VARCHAR(50) NOT NULL,
         content TEXT NOT NULL,
         category ENUM('story', 'quote') DEFAULT 'story',
+        theme VARCHAR(100) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // 兼容旧表：添加 theme 列
+    try {
+      await connection.query('ALTER TABLE posts ADD COLUMN theme VARCHAR(100) DEFAULT NULL AFTER category');
+    } catch (e) {
+      // 列已存在，忽略
+    }
+
+    // 创建公告表
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS announcements (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        theme VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     

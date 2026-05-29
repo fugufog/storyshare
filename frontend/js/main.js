@@ -6,7 +6,13 @@ const state = {
   activeTab: 'story',
   storyPage: 1,
   quotePage: 1,
-  postsPerPage: 5
+  postsPerPage: 5,
+  filter: {
+    theme: '',
+    dateFrom: '',
+    dateTo: '',
+    username: ''
+  }
 };
 
 const elements = {
@@ -31,13 +37,25 @@ const elements = {
   changePasswordForm: document.getElementById('changePasswordForm'),
   changeNicknameForm: document.getElementById('changeNicknameForm'),
   exportStoryBtn: document.getElementById('exportStoryBtn'),
-  exportQuoteBtn: document.getElementById('exportQuoteBtn')
+  exportQuoteBtn: document.getElementById('exportQuoteBtn'),
+  announcementList: document.getElementById('announcementList'),
+  newThemeInput: document.getElementById('newThemeInput'),
+  addThemeBtn: document.getElementById('addThemeBtn'),
+  postTheme: document.getElementById('postTheme'),
+  editPostTheme: document.getElementById('editPostTheme'),
+  filterTheme: document.getElementById('filterTheme'),
+  filterDateFrom: document.getElementById('filterDateFrom'),
+  filterDateTo: document.getElementById('filterDateTo'),
+  filterUsername: document.getElementById('filterUsername'),
+  applyFilterBtn: document.getElementById('applyFilterBtn'),
+  resetFilterBtn: document.getElementById('resetFilterBtn')
 };
 
 function init() {
   updateAuthUI();
   switchTab(state.activeTab, true);
   bindEvents();
+  loadAnnouncements();
 }
 
 function updateAuthUI() {
@@ -59,6 +77,110 @@ function updateAuthUI() {
     document.querySelectorAll('.nav-tab-admin').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
   }
+}
+
+function loadAnnouncements() {
+  fetch(API_BASE + '/announcements')
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      renderAnnouncements(data.announcements);
+      updateThemeSelects(data.announcements);
+    })
+    .catch(function(error) {
+      console.error('加载公告失败:', error);
+    });
+}
+
+function renderAnnouncements(announcements) {
+  if (!announcements || announcements.length === 0) {
+    elements.announcementList.innerHTML = '<p class="empty-message">暂无公告</p>';
+    return;
+  }
+
+  var isAdmin = state.user && state.user.role === 'admin';
+
+  elements.announcementList.innerHTML = announcements.map(function(a) {
+    return '<div class="announcement-item">' +
+      '<span class="announcement-theme">' + escapeHtml(a.theme) + '</span>' +
+      '<span class="announcement-date">' + formatDate(a.created_at) + '</span>' +
+      (isAdmin ? '<button class="announcement-delete-btn" onclick="deleteAnnouncement(' + a.id + ')">&times;</button>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function updateThemeSelects(announcements) {
+  var themeNames = [];
+  if (announcements) {
+    var seen = {};
+    announcements.forEach(function(a) {
+      if (!seen[a.theme]) {
+        seen[a.theme] = true;
+        themeNames.push(a.theme);
+      }
+    });
+  }
+
+  var optionsHtml = '<option value="">选择主题（可选）</option>' +
+    themeNames.map(function(t) { return '<option value="' + escapeHtml(t) + '">' + escapeHtml(t) + '</option>'; }).join('');
+
+  elements.postTheme.innerHTML = optionsHtml;
+  elements.editPostTheme.innerHTML = optionsHtml;
+  // 同步更新筛选栏的主题下拉
+  var filterOptions = '<option value="">全部主题</option>' +
+    themeNames.map(function(t) { return '<option value="' + escapeHtml(t) + '">' + escapeHtml(t) + '</option>'; }).join('');
+  // 保留当前选中值
+  var currentFilter = elements.filterTheme.value;
+  elements.filterTheme.innerHTML = filterOptions;
+  elements.filterTheme.value = currentFilter;
+}
+
+function createAnnouncement() {
+  var theme = elements.newThemeInput.value.trim();
+  if (!theme) { alert('请输入主题'); return; }
+
+  fetch(API_BASE + '/announcements', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + state.token
+    },
+    body: JSON.stringify({ theme: theme })
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        elements.newThemeInput.value = '';
+        loadAnnouncements();
+        alert('公告发布成功！');
+      } else {
+        alert(data.error || '发布失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('发布公告失败:', error);
+      alert('发布失败，请重试');
+    });
+}
+
+function deleteAnnouncement(id) {
+  if (!confirm('确定要删除这条公告吗？')) return;
+
+  fetch(API_BASE + '/announcements/' + id, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + state.token }
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        loadAnnouncements();
+      } else {
+        alert(data.error || '删除失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('删除公告失败:', error);
+      alert('删除失败，请重试');
+    });
 }
 
 function switchTab(tab, forceReload) {
@@ -100,7 +222,16 @@ function loadPosts() {
   var listEl = tab === 'story' ? elements.storyList : elements.quoteList;
   var pagEl = tab === 'story' ? elements.storyPagination : elements.quotePagination;
 
-  fetch(API_BASE + '/posts?category=' + category + '&page=' + page + '&limit=' + state.postsPerPage)
+  var params = 'category=' + category + '&page=' + page + '&limit=' + state.postsPerPage;
+
+  // 附加筛选参数
+  var f = state.filter;
+  if (f.theme) params += '&theme=' + encodeURIComponent(f.theme);
+  if (f.dateFrom) params += '&dateFrom=' + encodeURIComponent(f.dateFrom);
+  if (f.dateTo) params += '&dateTo=' + encodeURIComponent(f.dateTo);
+  if (f.username) params += '&username=' + encodeURIComponent(f.username);
+
+  fetch(API_BASE + '/posts?' + params)
     .then(function(res) { return res.json(); })
     .then(function(data) {
       renderPosts(data.posts, listEl, category);
@@ -119,11 +250,13 @@ function renderPosts(posts, container, category) {
 
   container.innerHTML = posts.map(function(post) {
     var isOwner = state.user && state.user.id === post.user_id;
+    var themeTag = post.theme ? '<span class="post-theme-tag">' + escapeHtml(post.theme) + '</span>' : '';
     return '<div class="post-item" data-id="' + post.id + '">' +
       '<p class="post-content">' + escapeHtml(post.content) + '</p>' +
       '<div class="post-meta">' +
         '<span>' +
           '<span class="post-author">' + escapeHtml(post.username) + '</span> ' +
+          themeTag + ' ' +
           '<span class="post-date">' + formatDate(post.created_at) + '</span>' +
         '</span>' +
         '<span class="post-actions">' +
@@ -194,9 +327,33 @@ function editPost(id) {
   var container = postItem.closest('.post-list');
   var category = (container && container.id === 'quoteList') ? 'quote' : 'story';
 
+  // 读取当前主题标签
+  var themeTag = postItem.querySelector('.post-theme-tag');
+  var currentTheme = themeTag ? themeTag.textContent : '';
+
   document.getElementById('editPostContent').value = content;
   document.getElementById('editPostCategory').value = category;
   document.getElementById('editPostModal').dataset.postId = id;
+
+  // 设置编辑模态框中的主题下拉
+  var editThemeSelect = document.getElementById('editPostTheme');
+  if (currentTheme) {
+    // 确保该主题在下拉选项中
+    var found = false;
+    for (var i = 0; i < editThemeSelect.options.length; i++) {
+      if (editThemeSelect.options[i].value === currentTheme) {
+        editThemeSelect.value = currentTheme;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      editThemeSelect.innerHTML += '<option value="' + escapeHtml(currentTheme) + '" selected>' + escapeHtml(currentTheme) + '</option>';
+    }
+  } else {
+    editThemeSelect.value = '';
+  }
+
   document.getElementById('editPostModal').classList.add('show');
 }
 
@@ -269,6 +426,42 @@ function bindEvents() {
     });
   });
 
+  // 公告 - 发布主题
+  elements.addThemeBtn.addEventListener('click', createAnnouncement);
+
+  // 公告 - 回车发布
+  elements.newThemeInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      createAnnouncement();
+    }
+  });
+
+  // 筛选
+  elements.applyFilterBtn.addEventListener('click', function() {
+    state.filter.theme = elements.filterTheme.value;
+    state.filter.dateFrom = elements.filterDateFrom.value;
+    state.filter.dateTo = elements.filterDateTo.value;
+    state.filter.username = elements.filterUsername.value.trim();
+    state.storyPage = 1;
+    state.quotePage = 1;
+    loadPosts();
+  });
+
+  elements.resetFilterBtn.addEventListener('click', function() {
+    state.filter.theme = '';
+    state.filter.dateFrom = '';
+    state.filter.dateTo = '';
+    state.filter.username = '';
+    elements.filterTheme.value = '';
+    elements.filterDateFrom.value = '';
+    elements.filterDateTo.value = '';
+    elements.filterUsername.value = '';
+    state.storyPage = 1;
+    state.quotePage = 1;
+    loadPosts();
+  });
+
   // Excel 下载按钮
   elements.exportStoryBtn.addEventListener('click', function() {
     downloadCategoryExcel('story');
@@ -294,7 +487,7 @@ function bindEvents() {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + state.token
         },
-        body: JSON.stringify({ content: content, category: category })
+        body: JSON.stringify({ content: content, category: category, theme: document.getElementById('editPostTheme').value })
       })
         .then(function(res) { return res.json(); })
         .then(function(data) {
@@ -382,6 +575,7 @@ function bindEvents() {
           elements.loginForm.reset();
           updateAuthUI();
           switchTab('story', true);
+          loadAnnouncements();
           alert('登录成功！');
         } else {
           alert(data.error || '登录失败');
@@ -435,7 +629,7 @@ function bindEvents() {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + state.token
       },
-      body: JSON.stringify({ content: content, category: category })
+      body: JSON.stringify({ content: content, category: category, theme: document.getElementById('postTheme').value })
     })
       .then(function(res) { return res.json(); })
       .then(function(data) {

@@ -4,39 +4,74 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-// 获取文章列表（分页）
+// 获取文章列表（分页 + 筛选）
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const category = req.query.category || 'all';
+    const theme = req.query.theme || '';
+    const dateFrom = req.query.dateFrom || '';
+    const dateTo = req.query.dateTo || '';
+    const username = req.query.username || '';
     const offset = (page - 1) * limit;
-    
-    let countQuery = 'SELECT COUNT(*) as total FROM posts';
+
+    let countQuery = 'SELECT COUNT(*) as total FROM posts p';
     let dataQuery = `
-      SELECT p.id, p.content, p.category, p.user_id, p.username, p.created_at
+      SELECT p.id, p.content, p.category, p.theme, p.user_id, p.username, p.created_at
       FROM posts p
     `;
     const queryParams = [];
     const countParams = [];
-    
+    const conditions = [];
+
     if (category !== 'all') {
-      dataQuery += ' WHERE p.category = ?';
-      countQuery += ' WHERE category = ?';
+      conditions.push('p.category = ?');
       queryParams.push(category);
       countParams.push(category);
     }
-    
+
+    if (theme) {
+      conditions.push('p.theme = ?');
+      queryParams.push(theme);
+      countParams.push(theme);
+    }
+
+    if (dateFrom) {
+      conditions.push('DATE(p.created_at) >= ?');
+      queryParams.push(dateFrom);
+      countParams.push(dateFrom);
+    }
+
+    if (dateTo) {
+      conditions.push('DATE(p.created_at) <= ?');
+      queryParams.push(dateTo);
+      countParams.push(dateTo);
+    }
+
+    if (username) {
+      conditions.push('p.username LIKE ?');
+      const likeParam = '%' + username + '%';
+      queryParams.push(likeParam);
+      countParams.push(likeParam);
+    }
+
+    if (conditions.length > 0) {
+      const whereClause = ' WHERE ' + conditions.join(' AND ');
+      dataQuery += whereClause;
+      countQuery += whereClause;
+    }
+
     // 获取总数
     const [countResult] = await pool.query(countQuery, countParams);
     const total = countResult[0].total;
-    
+
     // 获取数据
     dataQuery += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
     queryParams.push(limit, offset);
-    
+
     const [rows] = await pool.query(dataQuery, queryParams);
-    
+
     res.json({
       posts: rows,
       pagination: {
@@ -55,32 +90,34 @@ router.get('/', async (req, res) => {
 // 发布文章
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { content, category } = req.body;
-    
+    const { content, category, theme } = req.body;
+
     if (!content || content.trim().length === 0) {
       return res.status(400).json({ error: '内容不能为空' });
     }
-    
+
     if (content.length > 500) {
       return res.status(400).json({ error: '内容长度不能超过500个字符' });
     }
-    
+
     const postCategory = category === 'quote' ? 'quote' : 'story';
-    
+    const postTheme = theme && theme.trim() ? theme.trim() : null;
+
     // 使用昵称作为显示名（如果没有昵称则用用户名）
     const displayName = req.user.nickname || req.user.username;
-    
+
     const [result] = await pool.query(
-      'INSERT INTO posts (user_id, username, content, category) VALUES (?, ?, ?, ?)',
-      [req.user.id, displayName, content.trim(), postCategory]
+      'INSERT INTO posts (user_id, username, content, category, theme) VALUES (?, ?, ?, ?, ?)',
+      [req.user.id, displayName, content.trim(), postCategory, postTheme]
     );
-    
+
     res.status(201).json({
       message: '发布成功',
       post: {
         id: result.insertId,
         content: content.trim(),
         category: postCategory,
+        theme: postTheme,
         username: displayName,
         created_at: new Date().toISOString()
       }
@@ -95,7 +132,7 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
-    const { content, category } = req.body;
+    const { content, category, theme } = req.body;
 
     if (!content || content.trim().length === 0) {
       return res.status(400).json({ error: '内容不能为空' });
@@ -122,10 +159,11 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
 
     const postCategory = category === 'quote' ? 'quote' : 'story';
+    const postTheme = theme && theme.trim() ? theme.trim() : null;
 
     await pool.query(
-      'UPDATE posts SET content = ?, category = ? WHERE id = ?',
-      [content.trim(), postCategory, postId]
+      'UPDATE posts SET content = ?, category = ?, theme = ? WHERE id = ?',
+      [content.trim(), postCategory, postTheme, postId]
     );
 
     res.json({
@@ -134,6 +172,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
         id: postId,
         content: content.trim(),
         category: postCategory,
+        theme: postTheme,
         username: post.username,
         created_at: post.created_at
       }

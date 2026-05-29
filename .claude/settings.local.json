@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Skill(sickn33-ui-ux-pro-max)"
+      "Skill(sickn33-ui-ux-pro-max)",
+      "Skill(1bertogit-frontend-design)"
     ]
   }
 }
