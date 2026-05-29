@@ -1,7 +1,7 @@
 // Cloudflare Pages Functions 反向代理
 // 将 /api/* 请求转发到阿里云 ECS 后端
 
-const BACKEND_URL = "https://judge-minimum-assuming-trust.trycloudflare.com";
+const BACKEND_URL = "https://api.fugufog.top";
 
 export async function onRequest(context) {
   const { request } = context;
