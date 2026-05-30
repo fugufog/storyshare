@@ -1,4 +1,5 @@
 var API_BASE = window.API_BASE || '/api';
+var COLLAPSE_THRESHOLD = 80;
 
 const state = {
   token: localStorage.getItem('token'),
@@ -250,9 +251,11 @@ function renderPosts(posts, container, category) {
 
   container.innerHTML = posts.map(function(post) {
     var isOwner = state.user && state.user.id === post.user_id;
+    var isLong = post.content.length > COLLAPSE_THRESHOLD;
     var themeTag = post.theme ? '<span class="post-theme-tag">' + escapeHtml(post.theme) + '</span>' : '';
     return '<div class="post-item" data-id="' + post.id + '">' +
-      '<p class="post-content">' + escapeHtml(post.content) + '</p>' +
+      '<p class="post-content' + (isLong ? ' collapsed expandable' : '') + '">' + escapeHtml(post.content) + '</p>' +
+      (isLong ? '<button class="post-expand-btn">展开</button>' : '') +
       '<div class="post-meta">' +
         '<span>' +
           '<span class="post-author">' + escapeHtml(post.username) + '</span> ' +
@@ -752,6 +755,29 @@ function bindEvents() {
     if (e.target.classList.contains('nav-tab')) {
       hamburger.classList.remove('active');
       navTabs.classList.remove('open');
+    }
+  });
+
+  // 展开/收起长内容
+  document.addEventListener('click', function(e) {
+    var btn;
+    if (e.target.classList.contains('post-expand-btn')) {
+      btn = e.target;
+    } else if (e.target.classList.contains('post-content') && e.target.classList.contains('expandable')) {
+      btn = e.target.parentElement.querySelector('.post-expand-btn');
+      if (!btn) return;
+    } else {
+      return;
+    }
+    var postContent = btn.parentElement.querySelector('.post-content');
+    if (!postContent) return;
+    var isCollapsed = postContent.classList.contains('collapsed');
+    if (isCollapsed) {
+      postContent.classList.remove('collapsed');
+      btn.textContent = '收起';
+    } else {
+      postContent.classList.add('collapsed');
+      btn.textContent = '展开';
     }
   });
 }
