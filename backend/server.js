@@ -33,7 +33,7 @@ app.use('/api/announcements', announcementRoutes);
 
 // 本地开发模式：前端路由 - 所有非 API 请求返回 index.html
 // 生产环境中可移除此路由（由 Cloudflare Pages 托管前端）
-app.get('*', (req, res) => {
+app.get('/{*path}', (req, res) => {
   // 忽略 API 路由
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ error: 'API 接口不存在' });

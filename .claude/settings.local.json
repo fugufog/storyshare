@@ -3,7 +3,11 @@
     "allow": [
       "Skill(sickn33-ui-ux-pro-max)",
       "Skill(1bertogit-frontend-design)",
-      "Bash(node -e \"const bcrypt=require\\('bcryptjs'\\);bcrypt.hash\\('12345',10\\).then\\(h=>console.log\\(h\\)\\)\")"
+      "Bash(node -e \"const bcrypt=require\\('bcryptjs'\\);bcrypt.hash\\('12345',10\\).then\\(h=>console.log\\(h\\)\\)\")",
+      "Bash(npx skills *)",
+      "Skill(frontend-design)",
+      "Bash(python3 *)",
+      "Bash(git *)"
     ]
   }
 }

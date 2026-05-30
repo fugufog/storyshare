@@ -728,14 +728,31 @@ function bindEvents() {
       });
   });
 
-  // 退出登录（个人中心内联）
-  document.getElementById('logoutBtn').addEventListener('click', function() {
+  // 退出登录（导航栏）
+  document.getElementById('logoutNavBtn').addEventListener('click', function() {
     state.token = null;
     state.user = null;
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     updateAuthUI();
     switchTab('story', true);
+  });
+
+  // 汉堡菜单
+  var hamburger = document.getElementById('hamburgerBtn');
+  var navTabs = document.querySelector('.nav-tabs');
+
+  hamburger.addEventListener('click', function() {
+    hamburger.classList.toggle('active');
+    navTabs.classList.toggle('open');
+  });
+
+  // 点击菜单项后关闭
+  navTabs.addEventListener('click', function(e) {
+    if (e.target.classList.contains('nav-tab')) {
+      hamburger.classList.remove('active');
+      navTabs.classList.remove('open');
+    }
   });
 }
 
@@ -798,12 +815,12 @@ function renderUserList(users) {
     var isAdmin = user.role === 'admin';
     var canDel = !isSelf && !isAdmin;
     html += '<tr>' +
-      '<td>' + user.id + '</td>' +
-      '<td>' + escapeHtml(user.username) + '</td>' +
-      '<td><span class="user-badge ' + (isAdmin ? 'user-badge-admin' : 'user-badge-user') + '">' + (isAdmin ? '管理员' : '用户') + '</span></td>' +
-      '<td>' + user.post_count + '</td>' +
-      '<td>' + formatDate(user.created_at) + '</td>' +
-      '<td>' + (canDel
+      '<td data-label="ID">' + user.id + '</td>' +
+      '<td data-label="用户名">' + escapeHtml(user.username) + '</td>' +
+      '<td data-label="角色"><span class="user-badge ' + (isAdmin ? 'user-badge-admin' : 'user-badge-user') + '">' + (isAdmin ? '管理员' : '用户') + '</span></td>' +
+      '<td data-label="文章数">' + user.post_count + '</td>' +
+      '<td data-label="注册时间">' + formatDate(user.created_at) + '</td>' +
+      '<td data-label="操作">' + (canDel
         ? '<button class="delete-user-btn" onclick="deleteUser(' + user.id + ', \'' + escapeHtml(user.username) + '\')">删除用户</button>'
         : '<span style="color:var(--text-light);font-size:12px;">' + (isSelf ? '当前账号' : '不可删除') + '</span>') +
       '</td>' +

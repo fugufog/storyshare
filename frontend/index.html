@@ -22,9 +22,13 @@
           <button class="nav-tab nav-tab-admin" data-tab="users" style="display:none;">用户管理</button>
         </div>
       </div>
-      <div class="nav-right">
+      <button class="hamburger" id="hamburgerBtn" aria-label="菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-right" id="navRight">
         <span id="userInfo" class="user-info" style="display:none;">
           <span id="username" class="user-name"></span>
+          <button id="logoutNavBtn" class="btn btn-sm btn-logout-nav" title="退出登录">退出</button>
         </span>
         <div id="authButtons">
           <button id="showLoginBtn" class="btn btn-sm">登录</button>
@@ -152,8 +156,6 @@
           </form>
         </div>
 
-        <hr class="profile-divider">
-        <button id="logoutBtn" class="btn btn-danger">退出登录</button>
       </div>
     </section>
 
