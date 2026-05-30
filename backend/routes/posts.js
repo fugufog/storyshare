@@ -14,6 +14,7 @@ router.get('/', async (req, res) => {
     const dateFrom = req.query.dateFrom || '';
     const dateTo = req.query.dateTo || '';
     const username = req.query.username || '';
+    const search = req.query.search || '';
     const offset = (page - 1) * limit;
 
     let countQuery = 'SELECT COUNT(*) as total FROM posts p';
@@ -54,6 +55,13 @@ router.get('/', async (req, res) => {
       const likeParam = '%' + username + '%';
       queryParams.push(likeParam);
       countParams.push(likeParam);
+    }
+
+    if (search) {
+      conditions.push('p.content LIKE ?');
+      const searchParam = '%' + search + '%';
+      queryParams.push(searchParam);
+      countParams.push(searchParam);
     }
 
     if (conditions.length > 0) {

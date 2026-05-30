@@ -478,6 +478,22 @@ textarea:focus {
   font-family: var(--font-display);
 }
 
+.profile-block form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-block .btn {
+  align-self: flex-start;
+}
+
+@media (min-width: 769px) {
+  .profile-block form {
+    max-width: 460px;
+  }
+}
+
 .profile-divider {
   margin: 24px 0;
   border: none;
@@ -1131,45 +1147,10 @@ textarea:focus {
   transition: all var(--transition-fast);
 }
 
-/* ---- Profile ---- */
-.profile-block {
-  margin-bottom: 24px;
-}
-
-.profile-block h3 {
-  font-size: 1.05rem;
-  font-weight: 600;
-  margin-bottom: 14px;
-  color: var(--color-ink);
-  font-family: var(--font-display);
-}
-
-.profile-block form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.profile-block .btn {
-  align-self: flex-start;
-}
-
-@media (min-width: 769px) {
-  .profile-block form {
-    max-width: 460px;
-  }
-}
-
 /* ---- User Table Scrollable ---- */
 #userManageContent {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-}
-
-/* ---- Content Section (legacy grid) ---- */
-.content-section {
-  display: grid;
-  gap: 28px;
 }
 
 /* ---- Staggered Entrance Animation ---- */

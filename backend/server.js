@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const { initDB } = require('./config/db');
 
 const authRoutes = require('./routes/auth');
@@ -13,13 +14,34 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 中间件
-// CORS - 允许 Cloudflare Pages 前端访问（生产环境建议配置具体域名）
+// CORS
+var corsOrigin = process.env.CORS_ORIGIN || '*';
 app.use(cors({
-  origin: '*',
+  origin: corsOrigin,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
+// 通用 API 限流：每个 IP 每分钟最多 100 次请求
+var generalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: '请求过于频繁，请稍后再试' }
+});
+app.use('/api', generalLimiter);
+
+// 认证接口限流：每个 IP 每分钟最多 10 次请求（防暴力破解）
+var authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: '登录/注册请求过于频繁，请稍后再试' }
+});
+app.use('/api/auth', authLimiter);
 
 // 本地开发模式：同时提供前端静态文件
 // 生产环境中可移除以下代码（由 Cloudflare Pages 托管前端）

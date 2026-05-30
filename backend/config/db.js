@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+const bcrypt = require('bcryptjs');
 
 // 数据库连接池配置
 const pool = mysql.createPool({
@@ -69,7 +70,6 @@ async function initDB() {
     `);
     
     // 插入默认管理员（如果不存在，密码：12345）
-    const bcrypt = require('bcryptjs');
     const hashedPassword = await bcrypt.hash('12345', 10);
     
     const [existingAdmin] = await connection.query(

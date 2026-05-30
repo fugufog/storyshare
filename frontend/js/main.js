@@ -12,7 +12,8 @@ const state = {
     theme: '',
     dateFrom: '',
     dateTo: '',
-    username: ''
+    username: '',
+    search: ''
   }
 };
 
@@ -48,6 +49,7 @@ const elements = {
   filterDateFrom: document.getElementById('filterDateFrom'),
   filterDateTo: document.getElementById('filterDateTo'),
   filterUsername: document.getElementById('filterUsername'),
+  filterSearch: document.getElementById('filterSearch'),
   applyFilterBtn: document.getElementById('applyFilterBtn'),
   resetFilterBtn: document.getElementById('resetFilterBtn')
 };
@@ -231,6 +233,7 @@ function loadPosts() {
   if (f.dateFrom) params += '&dateFrom=' + encodeURIComponent(f.dateFrom);
   if (f.dateTo) params += '&dateTo=' + encodeURIComponent(f.dateTo);
   if (f.username) params += '&username=' + encodeURIComponent(f.username);
+  if (f.search) params += '&search=' + encodeURIComponent(f.search);
 
   fetch(API_BASE + '/posts?' + params)
     .then(function(res) { return res.json(); })
@@ -446,9 +449,25 @@ function bindEvents() {
     state.filter.dateFrom = elements.filterDateFrom.value;
     state.filter.dateTo = elements.filterDateTo.value;
     state.filter.username = elements.filterUsername.value.trim();
+    state.filter.search = elements.filterSearch.value.trim();
     state.storyPage = 1;
     state.quotePage = 1;
     loadPosts();
+  });
+
+  // 搜索框回车触发筛选
+  elements.filterSearch.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      state.filter.theme = elements.filterTheme.value;
+      state.filter.dateFrom = elements.filterDateFrom.value;
+      state.filter.dateTo = elements.filterDateTo.value;
+      state.filter.username = elements.filterUsername.value.trim();
+      state.filter.search = elements.filterSearch.value.trim();
+      state.storyPage = 1;
+      state.quotePage = 1;
+      loadPosts();
+    }
   });
 
   elements.resetFilterBtn.addEventListener('click', function() {
@@ -456,10 +475,12 @@ function bindEvents() {
     state.filter.dateFrom = '';
     state.filter.dateTo = '';
     state.filter.username = '';
+    state.filter.search = '';
     elements.filterTheme.value = '';
     elements.filterDateFrom.value = '';
     elements.filterDateTo.value = '';
     elements.filterUsername.value = '';
+    elements.filterSearch.value = '';
     state.storyPage = 1;
     state.quotePage = 1;
     loadPosts();
