@@ -21,8 +21,10 @@
         <div class="nav-tabs">
           <button class="nav-tab active" data-tab="story">故事</button>
           <button class="nav-tab" data-tab="quote">短句</button>
+          <button class="nav-tab" data-tab="album">专辑</button>
           <button class="nav-tab" data-tab="profile">个人中心</button>
           <button class="nav-tab nav-tab-admin" data-tab="users" style="display:none;">用户管理</button>
+          <button class="nav-tab nav-tab-admin" data-tab="adminAlbums" style="display:none;">专辑管理</button>
         </div>
       </div>
       <button class="hamburger" id="hamburgerBtn" aria-label="菜单">
@@ -135,6 +137,68 @@
       <div id="quotePagination" class="pagination"></div>
     </section>
 
+    <!-- 专辑标签页 -->
+    <section id="albumSection" class="tab-content" style="display:none;">
+      <!-- 专辑列表视图 -->
+      <div id="albumListView">
+        <div class="board">
+          <div class="board-header">
+            <h2 class="board-title">专辑</h2>
+            <button id="showCreateAlbumBtn" class="btn btn-sm btn-primary" style="display:none;">创建专辑</button>
+          </div>
+          <!-- 创建专辑表单 -->
+          <div id="createAlbumForm" class="album-form-wrapper" style="display:none;">
+            <div class="form-group">
+              <input type="text" id="albumName" class="form-input" placeholder="专辑名称" maxlength="100">
+            </div>
+            <div class="form-group">
+              <textarea id="albumDesc" class="form-textarea" placeholder="专辑描述（可选）" maxlength="500" rows="2"></textarea>
+            </div>
+            <div class="form-group album-public-toggle">
+              <label class="toggle-label">
+                <input type="checkbox" id="albumIsPublic" checked>
+                <span class="toggle-switch"></span>
+                <span class="toggle-text">公开专辑</span>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button id="submitAlbumBtn" class="btn btn-primary btn-sm">创建</button>
+              <button id="cancelAlbumBtn" class="btn btn-sm">取消</button>
+            </div>
+          </div>
+          <div id="albumList" class="album-grid"></div>
+        </div>
+        <div id="albumPagination" class="pagination"></div>
+      </div>
+      <!-- 专辑详情视图 -->
+      <div id="albumDetailView" style="display:none;">
+        <div class="board">
+          <div class="board-header">
+            <button id="backToAlbumListBtn" class="btn btn-sm">&larr; 返回专辑列表</button>
+            <span id="albumDetailActions" class="album-detail-actions"></span>
+          </div>
+          <div id="albumDetailInfo" class="album-detail-info"></div>
+          <!-- 添加内容表单 -->
+          <div id="albumEntryForm" class="album-entry-form" style="display:none;">
+            <textarea id="albumEntryContent" class="form-textarea" placeholder="写下你的新内容..." maxlength="2000" rows="3"></textarea>
+            <button id="submitAlbumEntryBtn" class="btn btn-primary btn-sm">添加内容</button>
+          </div>
+          <div id="albumEntryList" class="album-entry-list"></div>
+        </div>
+        <div id="albumEntryPagination" class="pagination"></div>
+      </div>
+    </section>
+
+    <!-- 管理员专辑管理标签页 -->
+    <section id="adminAlbumsSection" class="tab-content" style="display:none;">
+      <div class="board">
+        <h2 class="board-title">专辑管理</h2>
+        <div id="adminAlbumList" class="admin-album-list">
+          <p class="loading-text">加载中...</p>
+        </div>
+      </div>
+    </section>
+
     <!-- 个人中心标签页 -->
     <section id="profileSection" class="tab-content" style="display:none;">
       <div class="board">
@@ -237,6 +301,26 @@
       </form>
     </div>
   </div>
+
+  <!-- 评论侧边栏 -->
+  <div id="commentOverlay" class="comment-overlay"></div>
+  <div id="commentPanel" class="comment-panel">
+    <div class="comment-panel-header">
+      <h3>评论</h3>
+      <button id="closeCommentPanelBtn" class="comment-panel-close">&times;</button>
+    </div>
+    <div id="commentList" class="comment-list"></div>
+    <div id="commentPagination" class="pagination comment-pagination"></div>
+    <div class="comment-form-wrapper">
+      <form id="commentForm" class="comment-form">
+        <textarea id="commentContent" class="form-textarea" placeholder="写下你的评论..." maxlength="500" rows="2"></textarea>
+        <button type="submit" class="btn btn-primary btn-sm">发表评论</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 浮动收起按钮 -->
+  <button id="floatingCollapseBtn" class="floating-collapse-btn" style="display:none;" title="收起评论区">&uarr; 收起评论</button>
 
   <footer class="footer">
     <p>StoryShare &copy; 2024 - 分享你的故事</p>

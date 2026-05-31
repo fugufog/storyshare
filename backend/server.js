@@ -9,6 +9,8 @@ const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
 const adminRoutes = require('./routes/admin');
 const announcementRoutes = require('./routes/announcements');
+const albumRoutes = require('./routes/albums');
+const commentRoutes = require('./routes/comments');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,6 +54,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/albums', albumRoutes);
+app.use('/api/comments', commentRoutes);
 
 // 本地开发模式：前端路由 - 所有非 API 请求返回 index.html
 // 生产环境中可移除此路由（由 Cloudflare Pages 托管前端）

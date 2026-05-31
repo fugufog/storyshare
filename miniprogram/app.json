@@ -1,0 +1,38 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/quotes/quotes",
+    "pages/profile/profile",
+    "pages/create/create",
+    "pages/edit/edit",
+    "pages/admin-users/admin-users"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "StoryShare",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#faf7f2"
+  },
+  "tabBar": {
+    "color": "#78776d",
+    "selectedColor": "#2d6a4f",
+    "backgroundColor": "#fffdf9",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "故事"
+      },
+      {
+        "pagePath": "pages/quotes/quotes",
+        "text": "短句"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

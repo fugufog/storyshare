@@ -111,4 +111,42 @@ router.delete('/users/:id', authenticateToken, requireAdmin, async (req, res) =>
   }
 });
 
+// 管理员查看所有专辑
+router.get('/albums', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT a.*,
+        (SELECT COUNT(*) FROM album_entries WHERE album_id = a.id) as entry_count
+      FROM albums a
+      ORDER BY a.updated_at DESC
+    `);
+    res.json({ albums: rows });
+  } catch (error) {
+    console.error('获取所有专辑错误:', error);
+    res.status(500).json({ error: '获取专辑列表失败' });
+  }
+});
+
+// 管理员查看某个专辑的内容
+router.get('/albums/:id/entries', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const albumId = parseInt(req.params.id);
+
+    const [albums] = await pool.query('SELECT * FROM albums WHERE id = ?', [albumId]);
+    if (albums.length === 0) {
+      return res.status(404).json({ error: '专辑不存在' });
+    }
+
+    const [entries] = await pool.query(
+      'SELECT * FROM album_entries WHERE album_id = ? ORDER BY sort_order ASC, created_at DESC',
+      [albumId]
+    );
+
+    res.json({ album: albums[0], entries });
+  } catch (error) {
+    console.error('获取专辑内容错误:', error);
+    res.status(500).json({ error: '获取专辑内容失败' });
+  }
+});
+
 module.exports = router;

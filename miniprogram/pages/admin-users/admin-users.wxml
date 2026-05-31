@@ -1,0 +1,50 @@
+<view class="container" style="padding-top:20rpx;">
+  <view class="card">
+    <text class="card-title">用户管理</text>
+
+    <view wx:if="{{loading}}" class="loading-text">加载中...</view>
+
+    <block wx:elif="{{users.length === 0}}">
+      <text class="empty-message">暂无用户</text>
+    </block>
+
+    <block wx:else>
+      <view style="margin-bottom:16rpx;color:var(--color-stone);font-size:24rpx;">
+        共 {{users.length}} 位用户（不能删除自己和其他管理员）
+      </view>
+
+      <!-- Table header -->
+      <view class="user-table-header">
+        <text class="col-id">ID</text>
+        <text class="col-name">用户名</text>
+        <text class="col-role">角色</text>
+        <text class="col-count">文章数</text>
+        <text class="col-action">操作</text>
+      </view>
+
+      <!-- Table rows -->
+      <view class="user-table-row" wx:for="{{users}}" wx:key="id">
+        <text class="col-id">{{item.id}}</text>
+        <text class="col-name">{{item.username}}</text>
+        <text class="col-role">
+          <text class="user-badge {{item.role === 'admin' ? 'user-badge-admin' : 'user-badge-user'}}">
+            {{item.role === 'admin' ? '管理员' : '用户'}}
+          </text>
+        </text>
+        <text class="col-count">{{item.post_count}}</text>
+        <view class="col-action">
+          <text
+            wx:if="{{item.canDelete}}"
+            class="delete-user-btn"
+            bindtap="onDeleteUser"
+            data-id="{{item.id}}"
+            data-username="{{item.username}}"
+          >删除</text>
+          <text wx:else style="color:var(--color-stone);font-size:22rpx;">
+            {{item.id === currentUserId ? '当前账号' : '不可删除'}}
+          </text>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>

@@ -69,6 +69,48 @@ async function initDB() {
       )
     `);
     
+    // 创建专辑表
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS albums (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        username VARCHAR(50) NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        description VARCHAR(500) DEFAULT NULL,
+        is_public TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // 创建专辑内容表
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS album_entries (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        album_id INT NOT NULL,
+        content TEXT NOT NULL,
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE
+      )
+    `);
+
+    // 创建评论表
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS comments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        post_id INT NOT NULL,
+        user_id INT NOT NULL,
+        username VARCHAR(50) NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
     // 插入默认管理员（如果不存在，密码：12345）
     const hashedPassword = await bcrypt.hash('12345', 10);
     

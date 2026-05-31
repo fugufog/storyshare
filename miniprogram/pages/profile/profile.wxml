@@ -1,0 +1,150 @@
+<view class="container" style="padding-top:20rpx;">
+
+  <!-- Logged in view -->
+  <block wx:if="{{isLoggedIn}}">
+    <!-- User banner -->
+    <view class="user-banner">
+      <view class="user-avatar">
+        <text>{{user.nickname ? user.nickname[0] : user.username[0]}}</text>
+      </view>
+      <view class="user-banner-info">
+        <text class="user-banner-name">{{user.nickname || user.username}}</text>
+        <text class="user-banner-role">{{isAdmin ? '管理员' : '用户'}} · @{{user.username}}</text>
+      </view>
+    </view>
+
+    <!-- Profile: change nickname -->
+    <view class="card">
+      <view class="profile-block">
+        <text class="profile-block-title">修改昵称</text>
+        <view class="form-group">
+          <input
+            class="form-input"
+            placeholder="新昵称（1-20个字符）"
+            value="{{newNickname}}"
+            bindinput="onNewNicknameInput"
+            maxlength="20"
+          />
+        </view>
+        <button class="btn btn-primary" bindtap="onChangeNickname">确认修改</button>
+      </view>
+
+      <view class="profile-divider"></view>
+
+      <view class="profile-block">
+        <text class="profile-block-title">修改密码</text>
+        <view class="form-group">
+          <input
+            class="form-input"
+            type="password"
+            placeholder="当前密码"
+            value="{{oldPassword}}"
+            bindinput="onOldPasswordInput"
+            password
+          />
+        </view>
+        <view class="form-group">
+          <input
+            class="form-input"
+            type="password"
+            placeholder="新密码（至少6个字符）"
+            value="{{newPassword}}"
+            bindinput="onNewPasswordInput"
+            password
+          />
+        </view>
+        <button class="btn btn-primary" bindtap="onChangePassword">确认修改</button>
+      </view>
+    </view>
+
+    <!-- Admin links -->
+    <view class="card" wx:if="{{isAdmin}}">
+      <text class="card-title" style="margin-bottom:20rpx;">管理功能</text>
+      <view class="admin-links">
+        <view class="admin-link-item" bindtap="onGoAdminUsers">
+          <text>用户管理</text>
+          <text class="arrow-right">›</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Logout -->
+    <view class="center-actions">
+      <button class="btn btn-outline" bindtap="onLogout">退出登录</button>
+    </view>
+  </block>
+
+  <!-- Not logged in view -->
+  <block wx:else>
+    <view class="card" style="text-align:center;padding:48rpx;">
+      <text style="font-size:36rpx;font-weight:700;color:var(--color-forest);">StoryShare</text>
+      <text style="display:block;margin-top:12rpx;color:var(--color-stone);font-size:28rpx;">分享你的故事</text>
+    </view>
+
+    <!-- Auth tabs -->
+    <view class="auth-tabs">
+      <view
+        class="auth-tab {{authTab === 'login' ? 'active' : ''}}"
+        bindtap="onSwitchAuthTab"
+        data-tab="login"
+      >登录</view>
+      <view
+        class="auth-tab {{authTab === 'register' ? 'active' : ''}}"
+        bindtap="onSwitchAuthTab"
+        data-tab="register"
+      >注册</view>
+    </view>
+
+    <!-- Login form -->
+    <view class="card" wx:if="{{authTab === 'login'}}">
+      <view class="form-group">
+        <input
+          class="form-input"
+          placeholder="用户名"
+          value="{{loginUsername}}"
+          bindinput="onLoginInput"
+          data-field="loginUsername"
+        />
+      </view>
+      <view class="form-group">
+        <input
+          class="form-input"
+          type="password"
+          placeholder="密码"
+          value="{{loginPassword}}"
+          bindinput="onLoginInput"
+          data-field="loginPassword"
+          password
+        />
+      </view>
+      <button class="btn btn-primary btn-block" bindtap="onLogin">登录</button>
+    </view>
+
+    <!-- Register form -->
+    <view class="card" wx:if="{{authTab === 'register'}}">
+      <view class="form-group">
+        <input
+          class="form-input"
+          placeholder="用户名（2-20个字符）"
+          value="{{registerUsername}}"
+          bindinput="onRegInput"
+          data-field="registerUsername"
+          maxlength="20"
+        />
+      </view>
+      <view class="form-group">
+        <input
+          class="form-input"
+          type="password"
+          placeholder="密码（至少6个字符）"
+          value="{{registerPassword}}"
+          bindinput="onRegInput"
+          data-field="registerPassword"
+          password
+        />
+      </view>
+      <button class="btn btn-primary btn-block" bindtap="onRegister">注册</button>
+    </view>
+  </block>
+
+</view>

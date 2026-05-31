@@ -1,0 +1,4 @@
+/* pages/edit/edit.wxss */
+page {
+  padding-bottom: 40rpx;
+}

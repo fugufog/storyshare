@@ -1,0 +1,4 @@
+/* pages/create/create.wxss */
+page {
+  padding-bottom: 40rpx;
+}

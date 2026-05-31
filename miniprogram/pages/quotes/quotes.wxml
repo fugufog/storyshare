@@ -1,0 +1,159 @@
+<!-- 公告栏 -->
+<view class="container" style="padding-top:20rpx;">
+  <view class="announcement-board">
+    <view class="announcement-header">
+      <text class="announcement-title">公告栏</text>
+    </view>
+    <view class="announcement-list">
+      <block wx:if="{{announcements.length === 0}}">
+        <text class="empty-message" style="padding:16rpx;">暂无公告</text>
+      </block>
+      <block wx:else>
+        <view class="announcement-item" wx:for="{{announcements}}" wx:key="id">
+          <text class="announcement-theme">{{item.theme}}</text>
+          <text class="announcement-date">{{item.dateText}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 发布区域 -->
+  <view class="publish-section">
+    <text class="card-title">发布短句</text>
+    <view class="form-group">
+      <picker
+        mode="selector"
+        range="{{themeList}}"
+        value="{{publishThemeIndex}}"
+        bindchange="onPublishThemeChange"
+      >
+        <view class="form-picker">
+          <text class="{{publishTheme ? '' : 'placeholder-color'}}">{{publishTheme || '选择主题（可选）'}}</text>
+          <text style="color:#aaa;font-size:24rpx;">▼</text>
+        </view>
+      </picker>
+    </view>
+    <view class="form-group">
+      <textarea
+        class="form-textarea"
+        placeholder="写下你的短句..."
+        value="{{publishContent}}"
+        bindinput="onPublishInput"
+        maxlength="500"
+        auto-height
+      />
+    </view>
+    <view style="display:flex;gap:16rpx;">
+      <button class="btn btn-primary" style="flex:1;" bindtap="onPublish">发布短句</button>
+      <button class="btn btn-outline" style="flex:1;" bindtap="onGoCreate">高级发布</button>
+    </view>
+  </view>
+
+  <!-- 筛选栏 -->
+  <view class="filter-bar">
+    <view class="filter-toggle" bindtap="onToggleFilter">
+      <text>筛选条件</text>
+      <text class="arrow {{filterOpen ? 'open' : ''}}">▼</text>
+    </view>
+    <view class="filter-body" wx:if="{{filterOpen}}">
+      <view class="filter-row">
+        <view class="filter-item">
+          <text class="filter-label">主题</text>
+          <picker
+            mode="selector"
+            range="{{filterThemeList}}"
+            value="{{filterThemeIndex}}"
+            bindchange="onFilterThemeChange"
+          >
+            <view class="form-picker">
+              <text class="{{filter.theme ? '' : 'placeholder-color'}}">{{filter.theme || '全部主题'}}</text>
+              <text style="color:#aaa;font-size:24rpx;">▼</text>
+            </view>
+          </picker>
+        </view>
+        <view class="filter-item">
+          <text class="filter-label">开始日期</text>
+          <picker mode="date" value="{{filter.dateFrom}}" bindchange="onFilterDateFrom" end="{{filter.dateTo || ''}}">
+            <view class="form-picker">
+              <text class="{{filter.dateFrom ? '' : 'placeholder-color'}}">{{filter.dateFrom || '选择开始日期'}}</text>
+              <text style="color:#aaa;font-size:24rpx;">▼</text>
+            </view>
+          </picker>
+        </view>
+        <view class="filter-item">
+          <text class="filter-label">结束日期</text>
+          <picker mode="date" value="{{filter.dateTo}}" bindchange="onFilterDateTo" start="{{filter.dateFrom || ''}}">
+            <view class="form-picker">
+              <text class="{{filter.dateTo ? '' : 'placeholder-color'}}">{{filter.dateTo || '选择结束日期'}}</text>
+              <text style="color:#aaa;font-size:24rpx;">▼</text>
+            </view>
+          </picker>
+        </view>
+        <view class="filter-item">
+          <text class="filter-label">作者</text>
+          <input class="filter-input" type="text" placeholder="搜索作者..." value="{{filter.username}}" bindinput="onFilterUsername" />
+        </view>
+        <view class="filter-item">
+          <text class="filter-label">内容搜索</text>
+          <input class="filter-input" type="text" placeholder="搜索内容关键词..." value="{{filter.search}}" bindinput="onFilterSearch" />
+        </view>
+        <view class="filter-actions">
+          <button class="btn btn-primary btn-sm" bindtap="onApplyFilter">筛选</button>
+          <button class="btn btn-outline btn-sm" bindtap="onResetFilter">重置</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 短句列表 -->
+  <view class="card">
+    <text class="card-title">短句</text>
+    <view wx:if="{{loading}}" class="loading-text">加载中...</view>
+    <block wx:elif="{{posts.length === 0}}">
+      <text class="empty-message">暂无内容，快来发布第一条吧！</text>
+    </block>
+    <block wx:else>
+      <view class="post-list">
+        <view class="post-item" wx:for="{{posts}}" wx:key="id" wx:for-index="idx">
+          <text
+            class="post-content {{item.collapsed && item.isLong ? 'collapsed' : ''}}"
+            bindtap="onToggleExpand"
+            data-index="{{idx}}"
+          >{{item.content}}</text>
+          <text
+            wx:if="{{item.isLong}}"
+            class="post-expand-btn"
+            bindtap="onToggleExpand"
+            data-index="{{idx}}"
+          >{{item.collapsed ? '展开' : '收起'}}</text>
+          <view class="post-meta">
+            <view class="post-meta-left">
+              <text class="post-author">{{item.username}}</text>
+              <text wx:if="{{item.theme}}" class="post-theme-tag">{{item.theme}}</text>
+              <text class="post-date">{{item.dateText}}</text>
+            </view>
+            <view class="post-actions" wx:if="{{isLoggedIn && (currentUserId === item.user_id || isAdmin)}}">
+              <text
+                wx:if="{{currentUserId === item.user_id}}"
+                class="post-action-btn"
+                bindtap="onEditPost"
+                data-id="{{item.id}}"
+              >编辑</text>
+              <text
+                class="post-action-btn post-action-btn-delete"
+                bindtap="onDeletePost"
+                data-id="{{item.id}}"
+              >删除</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="pagination" wx:if="{{totalPages > 1}}">
+        <button bindtap="onPrevPage" disabled="{{page <= 1}}">上一页</button>
+        <text class="page-info">第 {{page}} / {{totalPages}} 页</text>
+        <button bindtap="onNextPage" disabled="{{page >= totalPages}}">下一页</button>
+      </view>
+    </block>
+  </view>
+</view>

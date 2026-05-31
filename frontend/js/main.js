@@ -7,6 +7,12 @@ const state = {
   activeTab: 'story',
   storyPage: 1,
   quotePage: 1,
+  albumPage: 1,
+  albumEntryPage: 1,
+  currentAlbumId: null,
+  currentAlbum: null,
+  currentCommentPostId: null,
+  commentPage: 1,
   postsPerPage: 5,
   filter: {
     theme: '',
@@ -51,7 +57,39 @@ const elements = {
   filterUsername: document.getElementById('filterUsername'),
   filterSearch: document.getElementById('filterSearch'),
   applyFilterBtn: document.getElementById('applyFilterBtn'),
-  resetFilterBtn: document.getElementById('resetFilterBtn')
+  resetFilterBtn: document.getElementById('resetFilterBtn'),
+  // Album elements
+  albumSection: document.getElementById('albumSection'),
+  albumListView: document.getElementById('albumListView'),
+  albumDetailView: document.getElementById('albumDetailView'),
+  albumList: document.getElementById('albumList'),
+  albumPagination: document.getElementById('albumPagination'),
+  albumEntryList: document.getElementById('albumEntryList'),
+  albumEntryPagination: document.getElementById('albumEntryPagination'),
+  albumDetailInfo: document.getElementById('albumDetailInfo'),
+  albumDetailActions: document.getElementById('albumDetailActions'),
+  showCreateAlbumBtn: document.getElementById('showCreateAlbumBtn'),
+  createAlbumForm: document.getElementById('createAlbumForm'),
+  albumName: document.getElementById('albumName'),
+  albumDesc: document.getElementById('albumDesc'),
+  albumIsPublic: document.getElementById('albumIsPublic'),
+  submitAlbumBtn: document.getElementById('submitAlbumBtn'),
+  cancelAlbumBtn: document.getElementById('cancelAlbumBtn'),
+  albumEntryForm: document.getElementById('albumEntryForm'),
+  albumEntryContent: document.getElementById('albumEntryContent'),
+  submitAlbumEntryBtn: document.getElementById('submitAlbumEntryBtn'),
+  backToAlbumListBtn: document.getElementById('backToAlbumListBtn'),
+  adminAlbumsSection: document.getElementById('adminAlbumsSection'),
+  adminAlbumList: document.getElementById('adminAlbumList'),
+  // Comment elements
+  commentOverlay: document.getElementById('commentOverlay'),
+  commentPanel: document.getElementById('commentPanel'),
+  commentList: document.getElementById('commentList'),
+  commentPagination: document.getElementById('commentPagination'),
+  commentForm: document.getElementById('commentForm'),
+  commentContent: document.getElementById('commentContent'),
+  closeCommentPanelBtn: document.getElementById('closeCommentPanelBtn'),
+  floatingCollapseBtn: document.getElementById('floatingCollapseBtn')
 };
 
 function init() {
@@ -65,6 +103,7 @@ function updateAuthUI() {
   if (state.token && state.user) {
     elements.userInfo.style.display = 'flex';
     elements.authButtons.style.display = 'none';
+    elements.showCreateAlbumBtn.style.display = '';
     elements.username.textContent = state.user.nickname || state.user.username;
 
     if (state.user.role === 'admin') {
@@ -77,6 +116,7 @@ function updateAuthUI() {
   } else {
     elements.userInfo.style.display = 'none';
     elements.authButtons.style.display = 'flex';
+    elements.showCreateAlbumBtn.style.display = 'none';
     document.querySelectorAll('.nav-tab-admin').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
   }
@@ -199,8 +239,19 @@ function switchTab(tab, forceReload) {
   elements.publishSection.style.display = (state.token && isStoryOrQuote) ? 'block' : 'none';
   elements.storySection.style.display = tab === 'story' ? 'block' : 'none';
   elements.quoteSection.style.display = tab === 'quote' ? 'block' : 'none';
+  elements.albumSection.style.display = tab === 'album' ? 'block' : 'none';
   elements.profileSection.style.display = tab === 'profile' ? 'block' : 'none';
   elements.usersSection.style.display = tab === 'users' ? 'block' : 'none';
+  elements.adminAlbumsSection.style.display = tab === 'adminAlbums' ? 'block' : 'none';
+
+  if (tab === 'album') {
+    elements.albumListView.style.display = 'block';
+    elements.albumDetailView.style.display = 'none';
+    state.currentAlbumId = null;
+    if (forceReload) {
+      loadAlbums();
+    }
+  }
 
   if (tab === 'story' || tab === 'quote') {
     document.getElementById('postCategory').value = tab;
@@ -215,6 +266,8 @@ function switchTab(tab, forceReload) {
     }
   } else if (tab === 'users') {
     loadUserList();
+  } else if (tab === 'adminAlbums') {
+    loadAdminAlbums();
   }
 }
 
@@ -266,6 +319,7 @@ function renderPosts(posts, container, category) {
           '<span class="post-date">' + formatDate(post.created_at) + '</span>' +
         '</span>' +
         '<span class="post-actions">' +
+          '<button class="post-comment-indicator" onclick="event.stopPropagation();openCommentPanel(' + post.id + ')">&#x1F4AC; 评论</button>' +
           (isOwner ? '<button class="post-action-btn post-action-btn-edit" onclick="editPost(' + post.id + ')">编辑</button>' : '') +
           (canDelete(post) ? '<button class="post-action-btn post-action-btn-delete" onclick="deletePost(' + post.id + ')">删除</button>' : '') +
         '</span>' +
@@ -801,6 +855,48 @@ function bindEvents() {
       btn.textContent = '展开';
     }
   });
+
+  // === 专辑事件 ===
+  elements.showCreateAlbumBtn.addEventListener('click', function() {
+    var form = elements.createAlbumForm;
+    if (form.style.display === 'none') {
+      form.style.display = 'block';
+      elements.albumName.focus();
+    } else {
+      form.style.display = 'none';
+    }
+  });
+
+  elements.cancelAlbumBtn.addEventListener('click', function() {
+    elements.createAlbumForm.style.display = 'none';
+    elements.albumName.value = '';
+    elements.albumDesc.value = '';
+    elements.albumIsPublic.checked = true;
+  });
+
+  elements.submitAlbumBtn.addEventListener('click', submitAlbum);
+
+  elements.albumName.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); submitAlbum(); }
+  });
+
+  elements.submitAlbumEntryBtn.addEventListener('click', addAlbumEntry);
+
+  elements.albumEntryContent.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addAlbumEntry(); }
+  });
+
+  elements.backToAlbumListBtn.addEventListener('click', backToAlbumList);
+
+  // === 评论事件 ===
+  elements.closeCommentPanelBtn.addEventListener('click', closeCommentPanel);
+  elements.commentOverlay.addEventListener('click', closeCommentPanel);
+  elements.floatingCollapseBtn.addEventListener('click', closeCommentPanel);
+
+  elements.commentForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitComment();
+  });
 }
 
 function escapeHtml(text) {
@@ -896,6 +992,567 @@ function deleteUser(id, username) {
     })
     .catch(function(error) {
       console.error('删除用户失败:', error);
+      alert('删除失败，请重试');
+    });
+}
+
+// ============================================================
+//  专辑功能
+// ============================================================
+
+function loadAlbums(userId) {
+  var params = 'page=' + state.albumPage + '&limit=12';
+  if (userId) params += '&user_id=' + userId;
+
+  var headers = {};
+  if (state.token) {
+    headers['Authorization'] = 'Bearer ' + state.token;
+  }
+
+  fetch(API_BASE + '/albums?' + params, { headers: headers })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      renderAlbums(data.albums);
+      renderPagination(data.pagination, elements.albumPagination);
+      // Override pagination click behavior for albums
+      elements.albumPagination.querySelectorAll('button').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var page = parseInt(this.textContent);
+          if (isNaN(page)) {
+            if (this.textContent.indexOf('上一页') !== -1) page = state.albumPage - 1;
+            else if (this.textContent.indexOf('下一页') !== -1) page = state.albumPage + 1;
+          }
+          if (page && page > 0) {
+            state.albumPage = page;
+            loadAlbums();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        });
+      });
+    })
+    .catch(function(error) {
+      console.error('加载专辑失败:', error);
+    });
+}
+
+function renderAlbums(albums) {
+  if (!albums || albums.length === 0) {
+    elements.albumList.innerHTML = '<p class="empty-message">暂无专辑，快来创建一个吧！</p>';
+    return;
+  }
+
+  elements.albumList.innerHTML = albums.map(function(a) {
+    var isOwner = state.user && state.user.id === a.user_id;
+    var isAdmin = state.user && state.user.role === 'admin';
+    var badge = a.is_public
+      ? '<span class="album-badge album-badge-public">公开</span>'
+      : '<span class="album-badge album-badge-private">私密</span>';
+    var desc = a.description ? '<p class="album-card-desc">' + escapeHtml(a.description) + '</p>' : '';
+    var actions = '';
+    if (isOwner || isAdmin) {
+      actions = '<div class="album-card-actions">' +
+        (isOwner ? '<button class="btn btn-sm" onclick="event.stopPropagation();editAlbumDialog(' + a.id + ')">编辑</button>' : '') +
+        '<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteAlbum(' + a.id + ')">删除</button>' +
+        '</div>';
+    }
+    return '<div class="album-card" onclick="viewAlbum(' + a.id + ')">' +
+      '<div class="album-card-name">' + escapeHtml(a.name) + badge + '</div>' +
+      desc +
+      '<div class="album-card-meta">' +
+        '<span class="album-card-author">' + escapeHtml(a.username) + '</span>' +
+        '<span class="album-card-count">' + a.entry_count + ' 篇</span>' +
+      '</div>' +
+      actions +
+    '</div>';
+  }).join('');
+}
+
+function submitAlbum() {
+  var name = elements.albumName.value.trim();
+  if (!name) { alert('请输入专辑名称'); return; }
+
+  fetch(API_BASE + '/albums', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + state.token
+    },
+    body: JSON.stringify({
+      name: name,
+      description: elements.albumDesc.value.trim(),
+      is_public: elements.albumIsPublic.checked
+    })
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        elements.createAlbumForm.style.display = 'none';
+        elements.albumName.value = '';
+        elements.albumDesc.value = '';
+        elements.albumIsPublic.checked = true;
+        state.albumPage = 1;
+        loadAlbums();
+        alert('专辑创建成功！');
+      } else {
+        alert(data.error || '创建失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('创建专辑失败:', error);
+      alert('创建失败，请重试');
+    });
+}
+
+function editAlbumDialog(albumId) {
+  fetch(API_BASE + '/albums/' + albumId, { headers: { 'Authorization': 'Bearer ' + state.token } })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var album = data.album;
+      var newName = prompt('专辑名称:', album.name);
+      if (!newName || !newName.trim()) return;
+      var newDesc = prompt('专辑描述:', album.description || '');
+      var pubChoice = confirm('是否公开此专辑？（确定=公开，取消=私密）');
+
+      fetch(API_BASE + '/albums/' + albumId, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token
+        },
+        body: JSON.stringify({
+          name: newName.trim(),
+          description: (newDesc || '').trim(),
+          is_public: pubChoice
+        })
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.message) {
+            loadAlbums();
+            if (state.currentAlbumId === albumId) {
+              viewAlbum(albumId);
+            }
+            alert('专辑更新成功！');
+          } else {
+            alert(data.error || '更新失败');
+          }
+        });
+    })
+    .catch(function(error) {
+      console.error('编辑专辑失败:', error);
+    });
+}
+
+function deleteAlbum(albumId) {
+  if (!confirm('确定要删除这个专辑及其所有内容吗？此操作不可撤销！')) return;
+
+  fetch(API_BASE + '/albums/' + albumId, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + state.token }
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        if (state.currentAlbumId === albumId) {
+          backToAlbumList();
+        }
+        loadAlbums();
+        alert('专辑已删除');
+      } else {
+        alert(data.error || '删除失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('删除专辑失败:', error);
+      alert('删除失败，请重试');
+    });
+}
+
+function viewAlbum(albumId) {
+  state.currentAlbumId = albumId;
+  state.albumEntryPage = 1;
+
+  var headers = {};
+  if (state.token) {
+    headers['Authorization'] = 'Bearer ' + state.token;
+  }
+
+  fetch(API_BASE + '/albums/' + albumId + '?page=1&limit=20', { headers: headers })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      state.currentAlbum = data.album;
+      elements.albumListView.style.display = 'none';
+      elements.albumDetailView.style.display = 'block';
+
+      var isOwner = state.user && state.user.id === data.album.user_id;
+      var pubBadge = data.album.is_public
+        ? '<span class="album-badge album-badge-public">公开</span>'
+        : '<span class="album-badge album-badge-private">私密</span>';
+
+      elements.albumDetailInfo.innerHTML =
+        '<div class="album-detail-name">' + escapeHtml(data.album.name) + pubBadge + '</div>' +
+        (data.album.description ? '<div class="album-detail-desc">' + escapeHtml(data.album.description) + '</div>' : '') +
+        '<div class="album-detail-meta">作者: ' + escapeHtml(data.album.username) + ' | ' + data.pagination.total + ' 篇内容</div>';
+
+      elements.albumDetailActions.innerHTML = isOwner
+        ? '<button class="btn btn-sm" onclick="editAlbumDialog(' + albumId + ')">编辑专辑</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="deleteAlbum(' + albumId + ')">删除专辑</button>'
+        : '';
+
+      elements.albumEntryForm.style.display = isOwner ? 'block' : 'none';
+
+      renderAlbumEntries(data.entries);
+      renderPagination(data.pagination, elements.albumEntryPagination);
+
+      elements.albumEntryPagination.querySelectorAll('button').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var page = parseInt(this.textContent);
+          if (isNaN(page)) {
+            if (this.textContent.indexOf('上一页') !== -1) page = state.albumEntryPage - 1;
+            else if (this.textContent.indexOf('下一页') !== -1) page = state.albumEntryPage + 1;
+          }
+          if (page && page > 0) {
+            state.albumEntryPage = page;
+            loadAlbumEntries(albumId, page);
+          }
+        });
+      });
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    })
+    .catch(function(error) {
+      console.error('加载专辑详情失败:', error);
+    });
+}
+
+function loadAlbumEntries(albumId, page) {
+  var headers = {};
+  if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
+
+  fetch(API_BASE + '/albums/' + albumId + '?page=' + page + '&limit=20', { headers: headers })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      renderAlbumEntries(data.entries);
+      renderPagination(data.pagination, elements.albumEntryPagination);
+      state.albumEntryPage = page;
+    });
+}
+
+function renderAlbumEntries(entries) {
+  if (!entries || entries.length === 0) {
+    elements.albumEntryList.innerHTML = '<p class="empty-message">暂无内容，开始写第一篇吧！</p>';
+    return;
+  }
+
+  var isOwner = state.currentAlbum && state.user && state.user.id === state.currentAlbum.user_id;
+  var isAdmin = state.user && state.user.role === 'admin';
+
+  elements.albumEntryList.innerHTML = entries.map(function(entry) {
+    var actions = '';
+    if (isOwner || isAdmin) {
+      actions = '<div class="album-entry-actions">' +
+        (isOwner ? '<button class="album-entry-edit-btn" onclick="editAlbumEntry(' + entry.id + ')">编辑</button>' : '') +
+        '<button class="album-entry-delete-btn" onclick="deleteAlbumEntry(' + entry.id + ')">删除</button>' +
+        '</div>';
+    }
+    return '<div class="album-entry-item">' +
+      '<div class="album-entry-content">' + escapeHtml(entry.content) + '</div>' +
+      '<div class="album-entry-meta">' +
+        '<span class="post-date">' + formatDate(entry.created_at) + '</span>' +
+        actions +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function addAlbumEntry() {
+  var content = elements.albumEntryContent.value.trim();
+  if (!content) { alert('内容不能为空'); return; }
+
+  fetch(API_BASE + '/albums/' + state.currentAlbumId + '/entries', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + state.token
+    },
+    body: JSON.stringify({ content: content })
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        elements.albumEntryContent.value = '';
+        state.albumEntryPage = 1;
+        loadAlbumEntries(state.currentAlbumId, 1);
+      } else {
+        alert(data.error || '添加失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('添加内容失败:', error);
+      alert('添加失败，请重试');
+    });
+}
+
+function editAlbumEntry(entryId) {
+  // Find entry content
+  var entryEl = document.querySelector('.album-entry-item');
+  var currentContent = '';
+
+  fetch(API_BASE + '/albums/' + state.currentAlbumId + '?limit=100', {
+    headers: state.token ? { 'Authorization': 'Bearer ' + state.token } : {}
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var entry = data.entries.find(function(e) { return e.id === entryId; });
+      if (!entry) return;
+
+      var newContent = prompt('编辑内容:', entry.content);
+      if (!newContent || !newContent.trim()) return;
+
+      fetch(API_BASE + '/albums/entries/' + entryId, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token
+        },
+        body: JSON.stringify({ content: newContent.trim() })
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.message) {
+            loadAlbumEntries(state.currentAlbumId, state.albumEntryPage);
+          } else {
+            alert(data.error || '编辑失败');
+          }
+        });
+    });
+}
+
+function deleteAlbumEntry(entryId) {
+  if (!confirm('确定要删除这条内容吗？')) return;
+
+  fetch(API_BASE + '/albums/entries/' + entryId, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + state.token }
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        loadAlbumEntries(state.currentAlbumId, state.albumEntryPage);
+      } else {
+        alert(data.error || '删除失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('删除内容失败:', error);
+      alert('删除失败，请重试');
+    });
+}
+
+function backToAlbumList() {
+  state.currentAlbumId = null;
+  state.currentAlbum = null;
+  elements.albumListView.style.display = 'block';
+  elements.albumDetailView.style.display = 'none';
+  loadAlbums();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================================
+//  管理员专辑管理
+// ============================================================
+
+function loadAdminAlbums() {
+  fetch(API_BASE + '/admin/albums', {
+    headers: { 'Authorization': 'Bearer ' + state.token }
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      renderAdminAlbums(data.albums);
+    })
+    .catch(function(error) {
+      console.error('加载所有专辑失败:', error);
+      elements.adminAlbumList.innerHTML = '<p class="loading-text" style="color:var(--danger-color)">加载失败</p>';
+    });
+}
+
+function renderAdminAlbums(albums) {
+  if (!albums || albums.length === 0) {
+    elements.adminAlbumList.innerHTML = '<p class="empty-message">暂无专辑</p>';
+    return;
+  }
+
+  elements.adminAlbumList.innerHTML = albums.map(function(a) {
+    var pubBadge = a.is_public
+      ? '<span class="album-badge album-badge-public">公开</span>'
+      : '<span class="album-badge album-badge-private">私密</span>';
+    return '<div class="admin-album-item" data-album-id="' + a.id + '">' +
+      '<div class="admin-album-header" onclick="toggleAdminAlbumEntries(' + a.id + ')">' +
+        '<span class="admin-album-name">' + escapeHtml(a.name) + pubBadge + '</span>' +
+        '<span class="admin-album-author">' + escapeHtml(a.username) + '</span>' +
+      '</div>' +
+      '<div class="admin-album-meta">' + a.entry_count + ' 篇 | 更新于 ' + formatDate(a.updated_at) + '</div>' +
+      '<div class="admin-album-entries" id="adminAlbumEntries-' + a.id + '" style="display:none;"></div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleAdminAlbumEntries(albumId) {
+  var container = document.getElementById('adminAlbumEntries-' + albumId);
+  if (!container) return;
+
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    container.innerHTML = '<p class="loading-text">加载中...</p>';
+
+    fetch(API_BASE + '/admin/albums/' + albumId + '/entries', {
+      headers: { 'Authorization': 'Bearer ' + state.token }
+    })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.entries.length === 0) {
+          container.innerHTML = '<p class="loading-text">暂无内容</p>';
+        } else {
+          container.innerHTML = data.entries.map(function(e) {
+            return '<div class="admin-album-entry">' +
+              '<div>' + escapeHtml(e.content) + '</div>' +
+              '<div class="admin-album-entry-date">' + formatDate(e.created_at) + '</div>' +
+              '</div>';
+          }).join('');
+        }
+      })
+      .catch(function(error) {
+        container.innerHTML = '<p class="loading-text" style="color:var(--danger-color)">加载失败</p>';
+      });
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+// ============================================================
+//  评论功能
+// ============================================================
+
+function openCommentPanel(postId) {
+  if (!state.token) {
+    alert('请先登录');
+    elements.loginModal.classList.add('show');
+    return;
+  }
+
+  state.currentCommentPostId = postId;
+  state.commentPage = 1;
+
+  elements.commentOverlay.classList.add('show');
+  elements.commentPanel.classList.add('show');
+  elements.floatingCollapseBtn.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+
+  loadComments(postId, 1);
+}
+
+function closeCommentPanel() {
+  elements.commentOverlay.classList.remove('show');
+  elements.commentPanel.classList.remove('show');
+  elements.floatingCollapseBtn.style.display = 'none';
+  document.body.style.overflow = '';
+  state.currentCommentPostId = null;
+}
+
+function loadComments(postId, page) {
+  fetch(API_BASE + '/comments/post/' + postId + '?page=' + page + '&limit=20')
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      renderComments(data.comments);
+      renderPagination(data.pagination, elements.commentPagination);
+
+      elements.commentPagination.querySelectorAll('button').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var p = parseInt(this.textContent);
+          if (isNaN(p)) {
+            if (this.textContent.indexOf('上一页') !== -1) p = state.commentPage - 1;
+            else if (this.textContent.indexOf('下一页') !== -1) p = state.commentPage + 1;
+          }
+          if (p && p > 0) {
+            state.commentPage = p;
+            loadComments(postId, p);
+          }
+        });
+      });
+    })
+    .catch(function(error) {
+      console.error('加载评论失败:', error);
+    });
+}
+
+function renderComments(comments) {
+  if (!comments || comments.length === 0) {
+    elements.commentList.innerHTML = '<p class="empty-message">暂无评论，快来发表第一条吧！</p>';
+    return;
+  }
+
+  var isAdmin = state.user && state.user.role === 'admin';
+
+  elements.commentList.innerHTML = comments.map(function(c) {
+    var canDel = (state.user && state.user.id === c.user_id) || isAdmin;
+    return '<div class="comment-item">' +
+      '<div class="comment-item-header">' +
+        '<span class="comment-author">' + escapeHtml(c.username) + '</span>' +
+        '<span class="comment-date">' + formatDate(c.created_at) + '</span>' +
+      '</div>' +
+      '<div class="comment-content">' + escapeHtml(c.content) + '</div>' +
+      (canDel ? '<button class="comment-delete-btn" onclick="deleteComment(' + c.id + ')" title="删除">&times;</button>' : '') +
+    '</div>';
+  }).join('');
+
+  elements.commentList.scrollTop = elements.commentList.scrollHeight;
+}
+
+function submitComment() {
+  var content = elements.commentContent.value.trim();
+  if (!content) { alert('评论内容不能为空'); return; }
+
+  fetch(API_BASE + '/comments/post/' + state.currentCommentPostId, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + state.token
+    },
+    body: JSON.stringify({ content: content })
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        elements.commentContent.value = '';
+        state.commentPage = 1;
+        loadComments(state.currentCommentPostId, 1);
+      } else {
+        alert(data.error || '评论失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('评论失败:', error);
+      alert('评论失败，请重试');
+    });
+}
+
+function deleteComment(commentId) {
+  if (!confirm('确定要删除这条评论吗？')) return;
+
+  fetch(API_BASE + '/comments/' + commentId, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + state.token }
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        loadComments(state.currentCommentPostId, state.commentPage);
+      } else {
+        alert(data.error || '删除失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('删除评论失败:', error);
       alert('删除失败，请重试');
     });
 }
