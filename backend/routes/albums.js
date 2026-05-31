@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
     const offset = (page - 1) * limit;
     const authorId = req.query.user_id || '';
 
-    let countQuery = 'SELECT COUNT(*) as total FROM albums WHERE (is_public = 1';
+    let countQuery = 'SELECT COUNT(*) as total FROM albums a WHERE (a.is_public = 1';
     let dataQuery = 'SELECT a.*, (SELECT COUNT(*) FROM album_entries WHERE album_id = a.id) as entry_count FROM albums a WHERE (a.is_public = 1';
     const params = [];
     const countParams = [];

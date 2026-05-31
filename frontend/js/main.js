@@ -1010,8 +1010,12 @@ function loadAlbums(userId) {
   }
 
   fetch(API_BASE + '/albums?' + params, { headers: headers })
-    .then(function(res) { return res.json(); })
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
     .then(function(data) {
+      if (!data.albums || !data.pagination) throw new Error('响应数据格式错误');
       renderAlbums(data.albums);
       renderPagination(data.pagination, elements.albumPagination);
       // Override pagination click behavior for albums
@@ -1032,6 +1036,7 @@ function loadAlbums(userId) {
     })
     .catch(function(error) {
       console.error('加载专辑失败:', error);
+      elements.albumList.innerHTML = '<p class="empty-message">加载专辑失败，请刷新重试</p>';
     });
 }
 
