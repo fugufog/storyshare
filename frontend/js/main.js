@@ -76,6 +76,7 @@ const elements = {
   submitAlbumBtn: document.getElementById('submitAlbumBtn'),
   cancelAlbumBtn: document.getElementById('cancelAlbumBtn'),
   albumEntryForm: document.getElementById('albumEntryForm'),
+  albumEntryTitle: document.getElementById('albumEntryTitle'),
   albumEntryContent: document.getElementById('albumEntryContent'),
   submitAlbumEntryBtn: document.getElementById('submitAlbumEntryBtn'),
   backToAlbumListBtn: document.getElementById('backToAlbumListBtn'),
@@ -593,6 +594,52 @@ function bindEvents() {
     });
   }
 
+  // 编辑专辑文章模态框提交
+  var editAlbumEntryForm = document.getElementById('editAlbumEntryForm');
+  if (editAlbumEntryForm) {
+    editAlbumEntryForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var modal = document.getElementById('editAlbumEntryModal');
+      var entryId = parseInt(modal.dataset.entryId);
+      var title = document.getElementById('editAlbumEntryTitle').value.trim();
+      var content = document.getElementById('editAlbumEntryContent').value.trim();
+
+      if (!title) { alert('标题不能为空'); return; }
+      if (!content) { alert('内容不能为空'); return; }
+
+      fetch(API_BASE + '/albums/entries/' + entryId, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token
+        },
+        body: JSON.stringify({ title: title, content: content })
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.message) {
+            modal.classList.remove('show');
+            editAlbumEntryForm.reset();
+            loadAlbumEntries(state.currentAlbumId, state.albumEntryPage);
+          } else {
+            alert(data.error || '编辑失败');
+          }
+        })
+        .catch(function(error) {
+          console.error('编辑文章失败:', error);
+          alert('编辑失败，请重试');
+        });
+    });
+  }
+
+  // 关闭编辑专辑文章模态框
+  var editAlbumEntryModal = document.getElementById('editAlbumEntryModal');
+  if (editAlbumEntryModal) {
+    editAlbumEntryModal.addEventListener('click', function(e) {
+      if (e.target === editAlbumEntryModal) editAlbumEntryModal.classList.remove('show');
+    });
+  }
+
   // 显示登录模态框
   document.getElementById('showLoginBtn').addEventListener('click', function() {
     elements.loginModal.classList.add('show');
@@ -881,6 +928,10 @@ function bindEvents() {
   });
 
   elements.submitAlbumEntryBtn.addEventListener('click', addAlbumEntry);
+
+  elements.albumEntryTitle.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); elements.albumEntryContent.focus(); }
+  });
 
   elements.albumEntryContent.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addAlbumEntry(); }
@@ -1245,7 +1296,7 @@ function loadAlbumEntries(albumId, page) {
 
 function renderAlbumEntries(entries) {
   if (!entries || entries.length === 0) {
-    elements.albumEntryList.innerHTML = '<p class="empty-message">暂无内容，开始写第一篇吧！</p>';
+    elements.albumEntryList.innerHTML = '<p class="empty-message">暂无文章，开始写第一篇吧！</p>';
     return;
   }
 
@@ -1253,6 +1304,9 @@ function renderAlbumEntries(entries) {
   var isAdmin = state.user && state.user.role === 'admin';
 
   elements.albumEntryList.innerHTML = entries.map(function(entry) {
+    var titleHtml = entry.title
+      ? '<div class="album-entry-title">' + escapeHtml(entry.title) + '</div>'
+      : '';
     var actions = '';
     if (isOwner || isAdmin) {
       actions = '<div class="album-entry-actions">' +
@@ -1261,6 +1315,7 @@ function renderAlbumEntries(entries) {
         '</div>';
     }
     return '<div class="album-entry-item">' +
+      titleHtml +
       '<div class="album-entry-content">' + escapeHtml(entry.content) + '</div>' +
       '<div class="album-entry-meta">' +
         '<span class="post-date">' + formatDate(entry.created_at) + '</span>' +
@@ -1271,7 +1326,9 @@ function renderAlbumEntries(entries) {
 }
 
 function addAlbumEntry() {
+  var title = elements.albumEntryTitle.value.trim();
   var content = elements.albumEntryContent.value.trim();
+  if (!title) { alert('请输入文章标题'); return; }
   if (!content) { alert('内容不能为空'); return; }
 
   fetch(API_BASE + '/albums/' + state.currentAlbumId + '/entries', {
@@ -1280,11 +1337,12 @@ function addAlbumEntry() {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ' + state.token
     },
-    body: JSON.stringify({ content: content })
+    body: JSON.stringify({ title: title, content: content })
   })
     .then(function(res) { return res.json(); })
     .then(function(data) {
       if (data.message) {
+        elements.albumEntryTitle.value = '';
         elements.albumEntryContent.value = '';
         state.albumEntryPage = 1;
         loadAlbumEntries(state.currentAlbumId, 1);
@@ -1293,16 +1351,12 @@ function addAlbumEntry() {
       }
     })
     .catch(function(error) {
-      console.error('添加内容失败:', error);
+      console.error('添加文章失败:', error);
       alert('添加失败，请重试');
     });
 }
 
 function editAlbumEntry(entryId) {
-  // Find entry content
-  var entryEl = document.querySelector('.album-entry-item');
-  var currentContent = '';
-
   fetch(API_BASE + '/albums/' + state.currentAlbumId + '?limit=100', {
     headers: state.token ? { 'Authorization': 'Bearer ' + state.token } : {}
   })
@@ -1311,25 +1365,10 @@ function editAlbumEntry(entryId) {
       var entry = data.entries.find(function(e) { return e.id === entryId; });
       if (!entry) return;
 
-      var newContent = prompt('编辑内容:', entry.content);
-      if (!newContent || !newContent.trim()) return;
-
-      fetch(API_BASE + '/albums/entries/' + entryId, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + state.token
-        },
-        body: JSON.stringify({ content: newContent.trim() })
-      })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          if (data.message) {
-            loadAlbumEntries(state.currentAlbumId, state.albumEntryPage);
-          } else {
-            alert(data.error || '编辑失败');
-          }
-        });
+      document.getElementById('editAlbumEntryTitle').value = entry.title || '';
+      document.getElementById('editAlbumEntryContent').value = entry.content;
+      document.getElementById('editAlbumEntryModal').dataset.entryId = entryId;
+      document.getElementById('editAlbumEntryModal').classList.add('show');
     });
 }
 
@@ -1419,7 +1458,9 @@ function toggleAdminAlbumEntries(albumId) {
           container.innerHTML = '<p class="loading-text">暂无内容</p>';
         } else {
           container.innerHTML = data.entries.map(function(e) {
+            var titleHtml = e.title ? '<div class="admin-album-entry-title">' + escapeHtml(e.title) + '</div>' : '';
             return '<div class="admin-album-entry">' +
+              titleHtml +
               '<div>' + escapeHtml(e.content) + '</div>' +
               '<div class="admin-album-entry-date">' + formatDate(e.created_at) + '</div>' +
               '</div>';

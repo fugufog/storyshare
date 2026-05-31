@@ -97,6 +97,15 @@ async function initDB() {
       )
     `);
 
+    // 为 album_entries 添加 title 字段（v8.2 迁移）
+    try {
+      await connection.query(
+        'ALTER TABLE album_entries ADD COLUMN title VARCHAR(200) DEFAULT NULL AFTER album_id'
+      );
+    } catch (e) {
+      // 字段已存在，忽略错误
+    }
+
     // 创建评论表
     await connection.query(`
       CREATE TABLE IF NOT EXISTS comments (

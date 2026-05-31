@@ -214,7 +214,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 router.post('/:id/entries', authenticateToken, async (req, res) => {
   try {
     const albumId = parseInt(req.params.id);
-    const { content } = req.body;
+    const { title, content } = req.body;
 
     const [albums] = await pool.query('SELECT * FROM albums WHERE id = ?', [albumId]);
     if (albums.length === 0) {
@@ -225,12 +225,19 @@ router.post('/:id/entries', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: '只有专辑作者可以添加内容' });
     }
 
+    if (!title || title.trim().length === 0) {
+      return res.status(400).json({ error: '标题不能为空' });
+    }
+    if (title.length > 200) {
+      return res.status(400).json({ error: '标题长度不能超过200个字符' });
+    }
+
     if (!content || content.trim().length === 0) {
       return res.status(400).json({ error: '内容不能为空' });
     }
 
-    if (content.length > 2000) {
-      return res.status(400).json({ error: '内容长度不能超过2000个字符' });
+    if (content.length > 50000) {
+      return res.status(400).json({ error: '内容长度不能超过50000个字符' });
     }
 
     const [maxOrder] = await pool.query(
@@ -240,18 +247,19 @@ router.post('/:id/entries', authenticateToken, async (req, res) => {
     const sortOrder = (maxOrder[0].max_order || 0) + 1;
 
     const [result] = await pool.query(
-      'INSERT INTO album_entries (album_id, content, sort_order) VALUES (?, ?, ?)',
-      [albumId, content.trim(), sortOrder]
+      'INSERT INTO album_entries (album_id, title, content, sort_order) VALUES (?, ?, ?, ?)',
+      [albumId, title.trim(), content.trim(), sortOrder]
     );
 
     // 更新专辑时间戳
     await pool.query('UPDATE albums SET updated_at = CURRENT_TIMESTAMP WHERE id = ?', [albumId]);
 
     res.status(201).json({
-      message: '内容添加成功',
+      message: '文章添加成功',
       entry: {
         id: result.insertId,
         album_id: albumId,
+        title: title.trim(),
         content: content.trim(),
         sort_order: sortOrder,
         created_at: new Date().toISOString()
@@ -267,7 +275,7 @@ router.post('/:id/entries', authenticateToken, async (req, res) => {
 router.put('/entries/:id', authenticateToken, async (req, res) => {
   try {
     const entryId = parseInt(req.params.id);
-    const { content } = req.body;
+    const { title, content } = req.body;
 
     const [entries] = await pool.query(
       'SELECT e.*, a.user_id FROM album_entries e JOIN albums a ON e.album_id = a.id WHERE e.id = ?',
@@ -285,7 +293,17 @@ router.put('/entries/:id', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: '内容不能为空' });
     }
 
-    await pool.query('UPDATE album_entries SET content = ? WHERE id = ?', [content.trim(), entryId]);
+    if (title !== undefined) {
+      if (title.trim().length === 0) {
+        return res.status(400).json({ error: '标题不能为空' });
+      }
+      if (title.length > 200) {
+        return res.status(400).json({ error: '标题长度不能超过200个字符' });
+      }
+      await pool.query('UPDATE album_entries SET title = ?, content = ? WHERE id = ?', [title.trim(), content.trim(), entryId]);
+    } else {
+      await pool.query('UPDATE album_entries SET content = ? WHERE id = ?', [content.trim(), entryId]);
+    }
     res.json({ message: '内容更新成功' });
   } catch (error) {
     console.error('编辑专辑内容错误:', error);
