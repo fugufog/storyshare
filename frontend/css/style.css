@@ -1279,6 +1279,28 @@ textarea:focus {
   padding: 3px 10px;
 }
 
+.album-card-comment-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-family: var(--font-body);
+  color: var(--color-stone);
+  padding: 3px 10px;
+  border-radius: 12px;
+  transition: all var(--transition-fast);
+  margin-right: 6px;
+}
+
+.album-card-comment-btn:hover {
+  color: var(--color-forest);
+  border-color: var(--color-sage);
+  background: var(--color-mist);
+}
+
 /* ---- Album Layout (main + sidebar) ---- */
 .album-layout {
   display: flex;
@@ -1529,6 +1551,27 @@ textarea:focus {
 .album-entry-actions {
   display: flex;
   gap: 6px;
+}
+
+.album-entry-comment-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-family: var(--font-body);
+  color: var(--color-stone);
+  padding: 2px 10px;
+  border-radius: 12px;
+  transition: all var(--transition-fast);
+}
+
+.album-entry-comment-btn:hover {
+  color: var(--color-forest);
+  border-color: var(--color-sage);
+  background: var(--color-mist);
 }
 
 .album-entry-edit-btn,

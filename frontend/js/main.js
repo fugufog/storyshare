@@ -12,6 +12,7 @@ const state = {
   currentAlbumId: null,
   currentAlbum: null,
   currentCommentPostId: null,
+  currentCommentType: 'post',
   commentPage: 1,
   postsPerPage: 5,
   filter: {
@@ -1085,9 +1086,11 @@ function renderAlbums(albums) {
       ? '<span class="album-badge album-badge-public">公开</span>'
       : '<span class="album-badge album-badge-private">私密</span>';
     var desc = a.description ? '<p class="album-card-desc">' + escapeHtml(a.description) + '</p>' : '';
-    var actions = '';
+    var actions = '<button class="album-card-comment-btn" onclick="event.stopPropagation();openCommentPanel(' + a.id + ', \'album\')" title="评论">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+      '</button>';
     if (isOwner || isAdmin) {
-      actions = '<div class="album-card-actions">' +
+      actions += '<div class="album-card-actions">' +
         (isOwner ? '<button class="btn btn-sm" onclick="event.stopPropagation();editAlbumDialog(' + a.id + ')">编辑</button>' : '') +
         '<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteAlbum(' + a.id + ')">删除</button>' +
         '</div>';
@@ -1287,9 +1290,11 @@ function renderAlbumEntries(entries) {
     var titleHtml = entry.title
       ? '<div class="album-entry-title">' + escapeHtml(entry.title) + '</div>'
       : '';
-    var actions = '';
+    var actions = '<button class="album-entry-comment-btn" onclick="openCommentPanel(' + entry.id + ', \'entry\')" title="评论">' +
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+      ' 评论</button>';
     if (isOwner || isAdmin) {
-      actions = '<div class="album-entry-actions">' +
+      actions += '<div class="album-entry-actions">' +
         (isOwner ? '<button class="album-entry-edit-btn" onclick="editAlbumEntry(' + entry.id + ')">编辑</button>' : '') +
         '<button class="album-entry-delete-btn" onclick="deleteAlbumEntry(' + entry.id + ')">删除</button>' +
         '</div>';
@@ -1459,14 +1464,15 @@ function toggleAdminAlbumEntries(albumId) {
 //  评论功能
 // ============================================================
 
-function openCommentPanel(postId) {
+function openCommentPanel(targetId, type) {
   if (!state.token) {
     alert('请先登录');
     elements.loginModal.classList.add('show');
     return;
   }
 
-  state.currentCommentPostId = postId;
+  state.currentCommentPostId = targetId;
+  state.currentCommentType = type || 'post';
   state.commentPage = 1;
 
   elements.commentOverlay.classList.add('show');
@@ -1474,7 +1480,7 @@ function openCommentPanel(postId) {
   elements.floatingCollapseBtn.style.display = 'block';
   document.body.style.overflow = 'hidden';
 
-  loadComments(postId, 1);
+  loadComments(targetId, 1);
 }
 
 function closeCommentPanel() {
@@ -1485,8 +1491,15 @@ function closeCommentPanel() {
   state.currentCommentPostId = null;
 }
 
-function loadComments(postId, page) {
-  fetch(API_BASE + '/comments/post/' + postId + '?page=' + page + '&limit=20')
+function getCommentApiPath() {
+  if (state.currentCommentType === 'album') return '/comments/album/';
+  if (state.currentCommentType === 'entry') return '/comments/entry/';
+  return '/comments/post/';
+}
+
+function loadComments(targetId, page) {
+  var apiPath = getCommentApiPath();
+  fetch(API_BASE + apiPath + targetId + '?page=' + page + '&limit=20')
     .then(function(res) { return res.json(); })
     .then(function(data) {
       renderComments(data.comments);
@@ -1501,7 +1514,7 @@ function loadComments(postId, page) {
           }
           if (p && p > 0) {
             state.commentPage = p;
-            loadComments(postId, p);
+            loadComments(targetId, p);
           }
         });
       });
@@ -1538,7 +1551,9 @@ function submitComment() {
   var content = elements.commentContent.value.trim();
   if (!content) { alert('评论内容不能为空'); return; }
 
-  fetch(API_BASE + '/comments/post/' + state.currentCommentPostId, {
+  var apiPath = getCommentApiPath();
+
+  fetch(API_BASE + apiPath + state.currentCommentPostId, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

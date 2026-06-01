@@ -110,15 +110,26 @@ async function initDB() {
     await connection.query(`
       CREATE TABLE IF NOT EXISTS comments (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        post_id INT NOT NULL,
+        post_id INT DEFAULT NULL,
+        album_id INT DEFAULT NULL,
+        entry_id INT DEFAULT NULL,
         user_id INT NOT NULL,
         username VARCHAR(50) NOT NULL,
         content TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+        FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE,
+        FOREIGN KEY (entry_id) REFERENCES album_entries(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
+
+    // 迁移：为已有评论表添加专辑/条目评论支持
+    try { await connection.query('ALTER TABLE comments ADD COLUMN album_id INT DEFAULT NULL AFTER post_id'); } catch (e) { /* 忽略 */ }
+    try { await connection.query('ALTER TABLE comments ADD COLUMN entry_id INT DEFAULT NULL AFTER album_id'); } catch (e) { /* 忽略 */ }
+    try { await connection.query('ALTER TABLE comments MODIFY post_id INT DEFAULT NULL'); } catch (e) { /* 忽略 */ }
+    try { await connection.query('ALTER TABLE comments ADD FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE'); } catch (e) { /* 忽略 */ }
+    try { await connection.query('ALTER TABLE comments ADD FOREIGN KEY (entry_id) REFERENCES album_entries(id) ON DELETE CASCADE'); } catch (e) { /* 忽略 */ }
 
     // 插入默认管理员（如果不存在，密码：12345）
     const hashedPassword = await bcrypt.hash('12345', 10);
