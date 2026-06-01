@@ -1279,42 +1279,105 @@ textarea:focus {
   padding: 3px 10px;
 }
 
-/* ---- Album Form ---- */
-.album-form-wrapper {
-  background: var(--color-cream);
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-md);
-  padding: 18px;
+/* ---- Album Layout (main + sidebar) ---- */
+.album-layout {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+.album-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.album-main .board-title {
   margin-bottom: 20px;
 }
 
-.album-form-wrapper .form-group {
-  margin-bottom: 10px;
+/* ---- Album Sidebar ---- */
+.album-sidebar {
+  flex-shrink: 0;
+  width: 280px;
+  position: sticky;
+  top: 24px;
 }
 
-.album-form-wrapper .form-input,
-.album-form-wrapper .form-textarea {
+.album-sidebar-card {
+  background: var(--color-warm-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.album-sidebar-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-forest), var(--color-sage), var(--color-moss));
+}
+
+.album-sidebar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--color-mist);
+  color: var(--color-forest);
+  margin-bottom: 14px;
+}
+
+.album-sidebar-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--color-forest);
+  margin-bottom: 4px;
+}
+
+.album-sidebar-desc {
+  font-size: 0.8rem;
+  color: var(--color-stone);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.album-sidebar-card .form-group {
+  margin-bottom: 12px;
+}
+
+.album-sidebar-card .form-input,
+.album-sidebar-card .form-textarea {
   width: 100%;
   padding: 10px 14px;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--color-ink);
-  background: white;
+  background: var(--color-cream);
   transition: all var(--transition-fast);
 }
 
-.album-form-wrapper .form-input:focus,
-.album-form-wrapper .form-textarea:focus {
+.album-sidebar-card .form-input:focus,
+.album-sidebar-card .form-textarea:focus {
   outline: none;
   border-color: var(--color-sage);
   box-shadow: var(--shadow-glow);
+  background: white;
 }
 
-.form-actions {
-  display: flex;
-  gap: 8px;
+.album-sidebar-card .btn-block {
+  width: 100%;
 }
 
 /* ---- Album Public Toggle ---- */
@@ -2081,6 +2144,17 @@ textarea:focus {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin-bottom: 2px;
+  }
+
+  /* --- Mobile Album Layout --- */
+  .album-layout {
+    flex-direction: column;
+  }
+
+  .album-sidebar {
+    width: 100%;
+    position: static;
+    order: -1;
   }
 
   /* --- Mobile Album Grid --- */

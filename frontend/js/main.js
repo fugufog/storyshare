@@ -68,13 +68,11 @@ const elements = {
   albumEntryPagination: document.getElementById('albumEntryPagination'),
   albumDetailInfo: document.getElementById('albumDetailInfo'),
   albumDetailActions: document.getElementById('albumDetailActions'),
-  showCreateAlbumBtn: document.getElementById('showCreateAlbumBtn'),
-  createAlbumForm: document.getElementById('createAlbumForm'),
+  albumSidebar: document.getElementById('albumSidebar'),
   albumName: document.getElementById('albumName'),
   albumDesc: document.getElementById('albumDesc'),
   albumIsPublic: document.getElementById('albumIsPublic'),
   submitAlbumBtn: document.getElementById('submitAlbumBtn'),
-  cancelAlbumBtn: document.getElementById('cancelAlbumBtn'),
   albumEntryForm: document.getElementById('albumEntryForm'),
   albumEntryTitle: document.getElementById('albumEntryTitle'),
   albumEntryContent: document.getElementById('albumEntryContent'),
@@ -104,7 +102,7 @@ function updateAuthUI() {
   if (state.token && state.user) {
     elements.userInfo.style.display = 'flex';
     elements.authButtons.style.display = 'none';
-    elements.showCreateAlbumBtn.style.display = '';
+    elements.albumSidebar.style.display = '';
     elements.username.textContent = state.user.nickname || state.user.username;
 
     if (state.user.role === 'admin') {
@@ -117,7 +115,7 @@ function updateAuthUI() {
   } else {
     elements.userInfo.style.display = 'none';
     elements.authButtons.style.display = 'flex';
-    elements.showCreateAlbumBtn.style.display = 'none';
+    elements.albumSidebar.style.display = 'none';
     document.querySelectorAll('.nav-tab-admin').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
   }
@@ -249,7 +247,7 @@ function switchTab(tab, forceReload) {
     elements.albumListView.style.display = 'block';
     elements.albumDetailView.style.display = 'none';
     state.currentAlbumId = null;
-    if (forceReload) {
+    if (forceReload || !elements.albumList.children.length) {
       loadAlbums();
     }
   }
@@ -904,23 +902,6 @@ function bindEvents() {
   });
 
   // === 专辑事件 ===
-  elements.showCreateAlbumBtn.addEventListener('click', function() {
-    var form = elements.createAlbumForm;
-    if (form.style.display === 'none') {
-      form.style.display = 'block';
-      elements.albumName.focus();
-    } else {
-      form.style.display = 'none';
-    }
-  });
-
-  elements.cancelAlbumBtn.addEventListener('click', function() {
-    elements.createAlbumForm.style.display = 'none';
-    elements.albumName.value = '';
-    elements.albumDesc.value = '';
-    elements.albumIsPublic.checked = true;
-  });
-
   elements.submitAlbumBtn.addEventListener('click', submitAlbum);
 
   elements.albumName.addEventListener('keydown', function(e) {
@@ -1142,7 +1123,6 @@ function submitAlbum() {
     .then(function(res) { return res.json(); })
     .then(function(data) {
       if (data.message) {
-        elements.createAlbumForm.style.display = 'none';
         elements.albumName.value = '';
         elements.albumDesc.value = '';
         elements.albumIsPublic.checked = true;

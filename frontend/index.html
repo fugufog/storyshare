@@ -138,34 +138,47 @@
     <section id="albumSection" class="tab-content" style="display:none;">
       <!-- 专辑列表视图 -->
       <div id="albumListView">
-        <div class="board">
-          <div class="board-header">
-            <h2 class="board-title">专辑</h2>
-            <button id="showCreateAlbumBtn" class="btn btn-sm btn-primary" style="display:none;">创建专辑</button>
+        <div class="album-layout">
+          <!-- 左侧主区域：专辑展示 -->
+          <div class="album-main">
+            <div class="board">
+              <h2 class="board-title">专辑</h2>
+              <div id="albumList" class="album-grid"></div>
+            </div>
+            <div id="albumPagination" class="pagination"></div>
           </div>
-          <!-- 创建专辑表单 -->
-          <div id="createAlbumForm" class="album-form-wrapper" style="display:none;">
-            <div class="form-group">
-              <input type="text" id="albumName" class="form-input" placeholder="专辑名称" maxlength="100">
+          <!-- 右侧边栏：新建专辑 -->
+          <aside class="album-sidebar" id="albumSidebar" style="display:none;">
+            <div class="album-sidebar-card">
+              <div class="album-sidebar-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1"/>
+                  <line x1="7" y1="10" x2="7" y2="14"/>
+                  <line x1="17" y1="10" x2="17" y2="14"/>
+                </svg>
+              </div>
+              <h3 class="album-sidebar-title">新建专辑</h3>
+              <p class="album-sidebar-desc">收藏你的故事，编织成册</p>
+              <div class="form-group">
+                <input type="text" id="albumName" class="form-input" placeholder="专辑名称" maxlength="100">
+              </div>
+              <div class="form-group">
+                <textarea id="albumDesc" class="form-textarea" placeholder="专辑描述（可选）" maxlength="500" rows="3"></textarea>
+              </div>
+              <div class="form-group album-public-toggle">
+                <label class="toggle-label">
+                  <input type="checkbox" id="albumIsPublic" checked>
+                  <span class="toggle-switch"></span>
+                  <span class="toggle-text">公开专辑</span>
+                </label>
+              </div>
+              <button id="submitAlbumBtn" class="btn btn-primary btn-sm btn-block">创建专辑</button>
             </div>
-            <div class="form-group">
-              <textarea id="albumDesc" class="form-textarea" placeholder="专辑描述（可选）" maxlength="500" rows="2"></textarea>
-            </div>
-            <div class="form-group album-public-toggle">
-              <label class="toggle-label">
-                <input type="checkbox" id="albumIsPublic" checked>
-                <span class="toggle-switch"></span>
-                <span class="toggle-text">公开专辑</span>
-              </label>
-            </div>
-            <div class="form-actions">
-              <button id="submitAlbumBtn" class="btn btn-primary btn-sm">创建</button>
-              <button id="cancelAlbumBtn" class="btn btn-sm">取消</button>
-            </div>
-          </div>
-          <div id="albumList" class="album-grid"></div>
+          </aside>
         </div>
-        <div id="albumPagination" class="pagination"></div>
       </div>
       <!-- 专辑详情视图 -->
       <div id="albumDetailView" style="display:none;">
