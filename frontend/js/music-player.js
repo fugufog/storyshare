@@ -1,6 +1,7 @@
 /**
  * StoryShare — 网易云音乐播放器
  * 通过网易云官方外链 iframe 嵌入歌单或单曲
+ * 仅管理员可修改音乐配置
  */
 
 (function () {
@@ -17,31 +18,42 @@
     els.toggleBtn = $('musicToggleBtn');
     els.panel = $('musicPanel');
     els.closeBtn = $('musicPanelCloseBtn');
+    els.configEl = $('musicConfig');
     els.typeSelect = $('musicType');
     els.idInput = $('musicIdInput');
     els.loadBtn = $('musicLoadBtn');
     els.iframeWrapper = $('musicIframeWrapper');
   }
 
+  function isAdmin() {
+    try {
+      var user = JSON.parse(localStorage.getItem('user') || 'null');
+      return user && user.role === 'admin';
+    } catch (e) {
+      return false;
+    }
+  }
+
   function loadPlayer(type, id) {
     if (!els.iframeWrapper) return;
 
     if (!id) {
-      els.iframeWrapper.innerHTML = '<p class="empty-message">请输入歌单或歌曲 ID 后点击"加载"</p>';
+      els.iframeWrapper.innerHTML = '<p class="empty-message">暂无音乐</p>';
       return;
     }
 
     var height = type === '0' ? 430 : 66;
-    var auto = type === '0' ? 0 : 0;
 
     els.iframeWrapper.innerHTML =
       '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" ' +
       'width="100%" height="' + height + '" ' +
       'src="https://music.163.com/outchain/player?type=' + type +
-      '&id=' + id + '&auto=' + auto + '&height=' + height + '">' +
+      '&id=' + id + '&auto=0&height=' + height + '">' +
       '</iframe>';
+  }
 
-    // Save last used config
+  function saveConfig(type, id) {
+    if (!isAdmin()) return;
     try {
       localStorage.setItem('musicType', type);
       localStorage.setItem('musicId', id);
@@ -50,6 +62,10 @@
 
   function openPanel() {
     els.panel.classList.add('show');
+    // 每次打开时检查权限
+    if (els.configEl) {
+      els.configEl.style.display = isAdmin() ? '' : 'none';
+    }
   }
 
   function closePanel() {
@@ -68,15 +84,25 @@
     cacheDom();
     if (!els.toggleBtn) return;
 
-    // Restore last config
-    var savedType = localStorage.getItem('musicType') || DEFAULT_TYPE;
-    var savedId = localStorage.getItem('musicId') || DEFAULT_ID;
+    // 始终显示播放器按钮（所有用户都能听）
+    els.toggleBtn.style.display = '';
 
-    if (els.typeSelect) els.typeSelect.value = savedType;
-    if (els.idInput) els.idInput.value = savedId;
+    // 仅管理员可修改配置
+    var admin = isAdmin();
+    if (els.configEl) {
+      els.configEl.style.display = admin ? '' : 'none';
+    }
 
-    // Auto-load default playlist on init
-    loadPlayer(savedType, savedId);
+    // 加载已保存的配置，否则用默认
+    var savedType = admin ? localStorage.getItem('musicType') : null;
+    var savedId = admin ? localStorage.getItem('musicId') : null;
+    var type = savedType || DEFAULT_TYPE;
+    var id = savedId || DEFAULT_ID;
+
+    if (els.typeSelect) els.typeSelect.value = type;
+    if (els.idInput) els.idInput.value = id;
+
+    loadPlayer(type, id);
 
     // Events
     els.toggleBtn.addEventListener('click', togglePanel);
@@ -85,20 +111,28 @@
       closePanel();
     });
 
-    els.loadBtn.addEventListener('click', function () {
-      var type = els.typeSelect.value;
-      var id = els.idInput.value.trim();
-      loadPlayer(type, id);
-    });
+    if (els.loadBtn) {
+      els.loadBtn.addEventListener('click', function () {
+        if (!isAdmin()) return;
+        var t = els.typeSelect.value;
+        var i = els.idInput.value.trim();
+        saveConfig(t, i);
+        loadPlayer(t, i);
+      });
+    }
 
-    els.idInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        var type = els.typeSelect.value;
-        var id = els.idInput.value.trim();
-        loadPlayer(type, id);
-      }
-    });
+    if (els.idInput) {
+      els.idInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (!isAdmin()) return;
+          var t = els.typeSelect.value;
+          var i = els.idInput.value.trim();
+          saveConfig(t, i);
+          loadPlayer(t, i);
+        }
+      });
+    }
 
     // Click outside to close
     document.addEventListener('click', function (e) {
