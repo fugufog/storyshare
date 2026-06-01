@@ -2320,6 +2320,225 @@ textarea:focus {
 }
 
 /* ---- Reduced Motion ---- */
+/* ---- Music Player (NetEase iframe) ---- */
+.music-player {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 280;
+}
+
+.music-toggle-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border-light);
+  background: var(--color-warm-white);
+  color: #ec4141;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-smooth);
+  z-index: 2;
+  position: relative;
+}
+
+.music-toggle-btn:hover {
+  background: #ec4141;
+  color: white;
+  border-color: #ec4141;
+  box-shadow: 0 4px 16px rgba(236, 65, 65, 0.35);
+  transform: translateY(-2px);
+}
+
+.music-toggle-btn:active {
+  transform: translateY(0) scale(0.95);
+}
+
+.music-panel {
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+  width: 340px;
+  background: var(--color-warm-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: musicPanelIn var(--transition-smooth) both;
+}
+
+.music-panel.show {
+  display: flex;
+}
+
+@keyframes musicPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.music-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border-light);
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #fef5f5, var(--color-warm-white));
+}
+
+.music-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-style: italic;
+  color: #ec4141;
+}
+
+.music-panel-close {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: var(--color-stone);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+  transition: all var(--transition-fast);
+}
+
+.music-panel-close:hover {
+  color: var(--color-ink);
+  background: var(--color-border-light);
+}
+
+.music-config {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border-light);
+  flex-shrink: 0;
+}
+
+.music-config-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.music-type-select {
+  padding: 8px 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--color-ink);
+  background: var(--color-cream);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.music-type-select:focus {
+  outline: none;
+  border-color: var(--color-sage);
+  box-shadow: var(--shadow-glow);
+}
+
+.music-id-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--color-ink);
+  background: var(--color-cream);
+}
+
+.music-id-input:focus {
+  outline: none;
+  border-color: var(--color-sage);
+  box-shadow: var(--shadow-glow);
+  background: white;
+}
+
+.music-config-hint {
+  font-size: 0.7rem;
+  color: var(--color-stone);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.music-config-hint a {
+  color: var(--color-forest);
+}
+
+.music-config-hint b {
+  color: #ec4141;
+}
+
+.music-iframe-wrapper {
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.music-iframe-wrapper iframe {
+  display: block;
+  width: 100%;
+  border: none;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .music-player {
+    bottom: 16px;
+    left: 12px;
+  }
+
+  .music-toggle-btn {
+    width: 42px;
+    height: 42px;
+  }
+
+  .music-panel {
+    width: calc(100vw - 24px);
+    max-width: 340px;
+    bottom: 54px;
+  }
+}
+
+@media (max-width: 400px) {
+  .music-player {
+    bottom: 12px;
+    left: 8px;
+  }
+
+  .music-toggle-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .music-panel {
+    width: calc(100vw - 16px);
+    bottom: 48px;
+    left: -4px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
