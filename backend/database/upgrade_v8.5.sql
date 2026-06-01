@@ -1,0 +1,10 @@
+-- 音乐播放器配置表（全局唯一，所有人同步）
+CREATE TABLE IF NOT EXISTS music_config (
+  id INT PRIMARY KEY DEFAULT 1,
+  music_type VARCHAR(10) NOT NULL DEFAULT '0',
+  music_id VARCHAR(50) NOT NULL DEFAULT '2233842197',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CHECK (id = 1)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO music_config (id, music_type, music_id) VALUES (1, '0', '2233842197');
