@@ -7,7 +7,7 @@
   'use strict';
 
   var DEFAULT_TYPE = '0';  // 0=歌单, 2=单曲
-  var DEFAULT_ID = '14118396881';  // 默认歌单 ID
+  var DEFAULT_ID = '2233842197';  // 默认歌单 ID
 
   var els = {};
 
