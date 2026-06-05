@@ -97,7 +97,22 @@ const elements = {
   newCategoryLabel: document.getElementById('newCategoryLabel'),
   addCategoryBtn: document.getElementById('addCategoryBtn'),
   postCategory: document.getElementById('postCategory'),
-  editPostCategory: document.getElementById('editPostCategory')
+  editPostCategory: document.getElementById('editPostCategory'),
+  // Sidebar & new modals
+  sidebar: document.getElementById('sidebar'),
+  sidebarOverlay: document.getElementById('sidebarOverlay'),
+  fabPublishBtn: document.getElementById('fabPublishBtn'),
+  publishModal: document.getElementById('publishModal'),
+  profileModal: document.getElementById('profileModal'),
+  updateModal: document.getElementById('updateModal'),
+  dismissUpdateBtn: document.getElementById('dismissUpdateBtn'),
+  // Theme management
+  themesSection: document.getElementById('themesSection'),
+  themeManageContent: document.getElementById('themeManageContent'),
+  themeAdminInput: document.getElementById('themeAdminInput'),
+  addThemeAdminBtn: document.getElementById('addThemeAdminBtn'),
+  // Preferences
+  saveNavLayoutBtn: document.getElementById('saveNavLayoutBtn')
 };
 
 function init() {
@@ -106,7 +121,10 @@ function init() {
   bindEvents();
   loadAnnouncements();
   loadCategories();
+  loadThemes();
   verifyTokenOnLoad();
+  checkVersionOnLoad();
+  initSidebar();
 }
 
 function verifyTokenOnLoad() {
@@ -121,9 +139,74 @@ function verifyTokenOnLoad() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         updateAuthUI();
+      } else {
+        return res.json().then(function(data) {
+          if (data.user) {
+            state.user = data.user;
+            localStorage.setItem('user', JSON.stringify(data.user));
+            applyNavLayout();
+          }
+        });
       }
     })
     .catch(function() {});
+}
+
+function initSidebar() {
+  var sidebar = elements.sidebar;
+  if (!sidebar) return;
+
+  function isMobile() { return window.innerWidth <= 768; }
+
+  // PC: hover trigger zone opens sidebar
+  var trigger = document.getElementById('sidebarTrigger');
+  if (trigger) {
+    trigger.addEventListener('mouseenter', function() {
+      if (!isMobile()) sidebar.classList.add('open');
+    });
+  }
+
+  sidebar.addEventListener('mouseleave', function() {
+    if (!isMobile()) sidebar.classList.remove('open');
+  });
+
+  // Mobile: click logo toggles sidebar
+  var logo = sidebar.querySelector('.sidebar-logo');
+  if (logo) {
+    logo.addEventListener('click', function(e) {
+      if (isMobile()) {
+        e.preventDefault();
+        sidebar.classList.toggle('open');
+        elements.sidebarOverlay.classList.toggle('show');
+      }
+    });
+  }
+
+  // Overlay click closes sidebar
+  elements.sidebarOverlay.addEventListener('click', function() {
+    sidebar.classList.remove('open');
+    elements.sidebarOverlay.classList.remove('show');
+  });
+
+  // Close sidebar on mobile after tab select
+  var navTabs = sidebar.querySelectorAll('.nav-tab');
+  navTabs.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (isMobile()) {
+        sidebar.classList.remove('open');
+        elements.sidebarOverlay.classList.remove('show');
+      }
+    });
+  });
+}
+
+function applyNavLayout() {
+  var layout = (state.user && state.user.nav_layout) || 'sidebar';
+  document.body.classList.toggle('layout-sidebar', layout === 'sidebar');
+  document.body.classList.toggle('layout-topbar', layout === 'topbar');
+  if (elements.fabPublishBtn) {
+    elements.fabPublishBtn.style.display = layout === 'topbar' ? 'none' : '';
+  }
 }
 
 function updateAuthUI() {
@@ -154,7 +237,6 @@ function loadAnnouncements() {
     .then(function(res) { return res.json(); })
     .then(function(data) {
       renderAnnouncements(data.announcements);
-      updateThemeSelects(data.announcements);
     })
     .catch(function(error) {
       console.error('加载公告失败:', error);
@@ -262,15 +344,14 @@ function switchTab(tab, forceReload) {
   });
 
   // 显示/隐藏各区块
-  const isStoryOrQuote = (tab === 'story' || tab === 'quote');
-  elements.publishSection.style.display = (state.token && isStoryOrQuote) ? 'block' : 'none';
   elements.storySection.style.display = tab === 'story' ? 'block' : 'none';
   elements.quoteSection.style.display = tab === 'quote' ? 'block' : 'none';
   elements.albumSection.style.display = tab === 'album' ? 'block' : 'none';
-  elements.profileSection.style.display = tab === 'profile' ? 'block' : 'none';
   elements.usersSection.style.display = tab === 'users' ? 'block' : 'none';
   elements.adminAlbumsSection.style.display = tab === 'adminAlbums' ? 'block' : 'none';
   elements.adminCategoriesSection.style.display = tab === 'adminCategories' ? 'block' : 'none';
+  elements.themesSection.style.display = tab === 'themes' ? 'block' : 'none';
+  if (elements.profileSection) elements.profileSection.style.display = tab === 'profile' ? 'block' : 'none';
 
   if (tab === 'album') {
     elements.albumListView.style.display = 'block';
@@ -298,6 +379,8 @@ function switchTab(tab, forceReload) {
     loadAdminAlbums();
   } else if (tab === 'adminCategories') {
     loadCategories();
+  } else if (tab === 'themes') {
+    loadThemes();
   }
 }
 
@@ -728,8 +811,15 @@ function bindEvents() {
           elements.loginModal.classList.remove('show');
           elements.loginForm.reset();
           updateAuthUI();
+          applyNavLayout();
+          loadThemes();
           switchTab('story', true);
           loadAnnouncements();
+          // 显示版本更新通知
+          if (data.version && data.version.has_update) {
+            state.currentVersion = data.version.current;
+            showUpdateNotification(data.version);
+          }
           alert('登录成功！');
         } else {
           alert(data.error || '登录失败');
@@ -893,23 +983,6 @@ function bindEvents() {
     switchTab('story', true);
   });
 
-  // 汉堡菜单
-  var hamburger = document.getElementById('hamburgerBtn');
-  var navTabs = document.querySelector('.nav-tabs');
-
-  hamburger.addEventListener('click', function() {
-    hamburger.classList.toggle('active');
-    navTabs.classList.toggle('open');
-  });
-
-  // 点击菜单项后关闭
-  navTabs.addEventListener('click', function(e) {
-    if (e.target.classList.contains('nav-tab')) {
-      hamburger.classList.remove('active');
-      navTabs.classList.remove('open');
-    }
-  });
-
   // 展开/收起长内容
   document.addEventListener('click', function(e) {
     var btn;
@@ -971,6 +1044,75 @@ function bindEvents() {
   elements.newCategoryLabel.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') { e.preventDefault(); addCategory(); }
   });
+
+  // === FAB: 打开发布模态框 ===
+  elements.fabPublishBtn.addEventListener('click', function() {
+    if (!state.token) {
+      alert('请先登录');
+      elements.loginModal.classList.add('show');
+      return;
+    }
+    if (state.activeTab === 'story' || state.activeTab === 'quote') {
+      document.getElementById('postCategory').value = state.activeTab;
+    }
+    elements.publishModal.classList.add('show');
+  });
+
+  // === 昵称点击 → 个人中心模态框 ===
+  elements.username.addEventListener('click', function(e) {
+    if (!state.token || !state.user) return;
+    var nicknameInput = document.getElementById('newNickname');
+    if (nicknameInput) nicknameInput.value = state.user.nickname || state.user.username;
+    var layout = state.user.nav_layout || 'sidebar';
+    document.querySelectorAll('input[name="navLayout"]').forEach(function(r) {
+      r.checked = (r.value === layout);
+    });
+    elements.profileModal.classList.add('show');
+  });
+
+  // === 发布模态框：外部点击关闭 ===
+  elements.publishModal.addEventListener('click', function(e) {
+    if (e.target === elements.publishModal) elements.publishModal.classList.remove('show');
+  });
+
+  // === 个人中心模态框：外部点击关闭 ===
+  elements.profileModal.addEventListener('click', function(e) {
+    if (e.target === elements.profileModal) elements.profileModal.classList.remove('show');
+  });
+
+  // === 更新通知：关闭按钮 ===
+  elements.dismissUpdateBtn.addEventListener('click', function() {
+    elements.updateModal.classList.remove('show');
+    if (state.currentVersion) {
+      fetch(API_BASE + '/auth/seen-version', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token
+        },
+        body: JSON.stringify({ version: state.currentVersion })
+      }).then(function() {
+        if (state.user) {
+          state.user.last_seen_version = state.currentVersion;
+          localStorage.setItem('user', JSON.stringify(state.user));
+        }
+      }).catch(function() {});
+    }
+  });
+
+  // === 更新通知模态框：外部点击关闭 ===
+  elements.updateModal.addEventListener('click', function(e) {
+    if (e.target === elements.updateModal) elements.updateModal.classList.remove('show');
+  });
+
+  // === 主题管理：添加主题 ===
+  elements.addThemeAdminBtn.addEventListener('click', addTheme);
+  elements.themeAdminInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); addTheme(); }
+  });
+
+  // === 导航布局偏好保存 ===
+  elements.saveNavLayoutBtn.addEventListener('click', saveNavLayout);
 }
 
 function escapeHtml(text) {
@@ -1809,6 +1951,200 @@ function deleteComment(commentId) {
     .catch(function(error) {
       console.error('删除评论失败:', error);
       alert('删除失败，请重试');
+    });
+}
+
+// ============================================================
+//  主题管理
+// ============================================================
+
+function loadThemes() {
+  fetch(API_BASE + '/themes')
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      populateThemeSelects(data.themes);
+      if (state.activeTab === 'themes') {
+        renderThemeManagement(data.themes);
+      }
+    })
+    .catch(function(error) {
+      console.error('加载主题失败:', error);
+      if (state.activeTab === 'themes') {
+        elements.themeManageContent.innerHTML = '<p class="loading-text" style="color:var(--danger-color)">加载失败</p>';
+      }
+    });
+}
+
+function populateThemeSelects(themes) {
+  if (!themes || !themes.length) return;
+  var optionsHtml = '<option value="">选择主题（可选）</option>' +
+    themes.map(function(t) { return '<option value="' + escapeHtml(t.name) + '">' + escapeHtml(t.name) + '</option>'; }).join('');
+
+  if (elements.postTheme) elements.postTheme.innerHTML = optionsHtml;
+  if (elements.editPostTheme) elements.editPostTheme.innerHTML = optionsHtml;
+
+  var filterOptions = '<option value="">全部主题</option>' +
+    themes.map(function(t) { return '<option value="' + escapeHtml(t.name) + '">' + escapeHtml(t.name) + '</option>'; }).join('');
+  if (elements.filterTheme) {
+    var currentFilter = elements.filterTheme.value;
+    elements.filterTheme.innerHTML = filterOptions;
+    elements.filterTheme.value = currentFilter;
+  }
+}
+
+function renderThemeManagement(themes) {
+  var container = elements.themeManageContent;
+  if (!themes || themes.length === 0) {
+    container.innerHTML = '<p class="empty-message">暂无主题</p>';
+    return;
+  }
+  container.innerHTML = '<div style="margin-bottom:12px;color:var(--text-light);font-size:13px;">共 ' + themes.length + ' 个主题</div>' +
+    '<div class="theme-list">' +
+    themes.map(function(t) {
+      return '<div class="theme-list-item">' +
+        '<span>' + escapeHtml(t.name) + '</span>' +
+        '<span>' +
+          '<button class="btn btn-sm" onclick="editTheme(' + t.id + ')">编辑</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="deleteTheme(' + t.id + ')">删除</button>' +
+        '</span>' +
+      '</div>';
+    }).join('') +
+    '</div>';
+}
+
+function addTheme() {
+  var name = elements.themeAdminInput.value.trim();
+  if (!name) { alert('请输入主题名称'); return; }
+  fetch(API_BASE + '/themes', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + state.token
+    },
+    body: JSON.stringify({ name: name })
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        elements.themeAdminInput.value = '';
+        loadThemes();
+        alert('主题添加成功！');
+      } else {
+        alert(data.error || '添加失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('添加主题失败:', error);
+      alert('添加失败，请重试');
+    });
+}
+
+function editTheme(id) {
+  var newName = prompt('新的主题名称:');
+  if (!newName || !newName.trim()) return;
+  fetch(API_BASE + '/themes/' + id, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + state.token
+    },
+    body: JSON.stringify({ name: newName.trim() })
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        loadThemes();
+        alert('主题更新成功！');
+      } else {
+        alert(data.error || '更新失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('更新主题失败:', error);
+      alert('更新失败，请重试');
+    });
+}
+
+function deleteTheme(id) {
+  if (!confirm('确定要删除这个主题吗？')) return;
+  fetch(API_BASE + '/themes/' + id, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + state.token }
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        loadThemes();
+        alert('主题删除成功！');
+      } else {
+        alert(data.error || '删除失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('删除主题失败:', error);
+      alert('删除失败，请重试');
+    });
+}
+
+// ============================================================
+//  版本更新通知
+// ============================================================
+
+function checkVersionOnLoad() {
+  fetch(API_BASE + '/version')
+    .then(function(res) { return res.json(); })
+    .then(function(versionData) {
+      state.currentVersion = versionData.version;
+      if (state.token && state.user) {
+        var lastSeen = state.user.last_seen_version;
+        if (!lastSeen || lastSeen !== versionData.version) {
+          showUpdateNotification(versionData);
+        }
+      }
+    })
+    .catch(function() { /* 静默失败 */ });
+}
+
+function showUpdateNotification(versionData) {
+  document.getElementById('updateInfoText').textContent = versionData.update_info;
+  var list = document.getElementById('updateFeaturesList');
+  list.innerHTML = (versionData.features || []).map(function(f) {
+    return '<li>' + escapeHtml(f) + '</li>';
+  }).join('');
+  elements.updateModal.classList.add('show');
+}
+
+// ============================================================
+//  导航布局偏好
+// ============================================================
+
+function saveNavLayout() {
+  var selected = document.querySelector('input[name="navLayout"]:checked');
+  if (!selected) return;
+  var layout = selected.value;
+
+  fetch(API_BASE + '/auth/preferences', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + state.token
+    },
+    body: JSON.stringify({ nav_layout: layout })
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        if (state.user) state.user.nav_layout = layout;
+        localStorage.setItem('user', JSON.stringify(state.user));
+        applyNavLayout();
+        alert('布局偏好已保存！刷新页面后生效。');
+      } else {
+        alert(data.error || '保存失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('保存偏好失败:', error);
+      alert('保存失败，请重试');
     });
 }
 

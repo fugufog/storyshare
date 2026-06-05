@@ -38,7 +38,21 @@ async function initDB() {
     } catch (e) {
       // 字段已存在，忽略错误
     }
-    
+
+    // 添加 nav_layout 偏好字段
+    try {
+      await connection.query(
+        "ALTER TABLE users ADD COLUMN nav_layout ENUM('sidebar','topbar') DEFAULT 'sidebar' AFTER role"
+      );
+    } catch (e) { /* 已存在 */ }
+
+    // 添加 last_seen_version 字段
+    try {
+      await connection.query(
+        'ALTER TABLE users ADD COLUMN last_seen_version VARCHAR(20) DEFAULT NULL AFTER nav_layout'
+      );
+    } catch (e) { /* 已存在 */ }
+
     // 创建文章表
     await connection.query(`
       CREATE TABLE IF NOT EXISTS posts (
@@ -92,7 +106,22 @@ async function initDB() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    
+
+    // 创建主题表
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS themes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 种子默认主题
+    await connection.query(
+      'INSERT IGNORE INTO themes (name) VALUES (?), (?), (?), (?), (?), (?), (?)',
+      ['春日物语', '夏夜蝉鸣', '秋日私语', '冬日暖阳', '生活随笔', '旅行见闻', '读书笔记']
+    );
+
     // 创建专辑表
     await connection.query(`
       CREATE TABLE IF NOT EXISTS albums (

@@ -1,8 +1,16 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
 const { pool } = require('../config/db');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
+
+function getVersionInfo() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'version.json'), 'utf8'));
+  } catch (e) { return null; }
+}
 
 const router = express.Router();
 
@@ -85,6 +93,8 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
     
+    const versionData = getVersionInfo();
+
     res.json({
       message: '登录成功',
       token,
@@ -92,8 +102,16 @@ router.post('/login', async (req, res) => {
         id: user.id,
         username: user.username,
         nickname: nickname,
-        role: user.role
-      }
+        role: user.role,
+        nav_layout: user.nav_layout || 'sidebar',
+        last_seen_version: user.last_seen_version || null
+      },
+      version: versionData ? {
+        current: versionData.version,
+        update_info: versionData.update_info,
+        features: versionData.features,
+        has_update: !user.last_seen_version || user.last_seen_version !== versionData.version
+      } : null
     });
   } catch (error) {
     console.error('登录错误:', error);
@@ -178,14 +196,61 @@ router.put('/nickname', require('../middleware/auth').authenticateToken, async (
 
 // 验证当前登录状态
 router.get('/me', authenticateToken, async (req, res) => {
+  const [userRows] = await pool.query(
+    'SELECT id, username, nickname, role, nav_layout, last_seen_version FROM users WHERE id = ?',
+    [req.user.id]
+  );
+  if (userRows.length === 0) {
+    return res.status(404).json({ error: '用户不存在' });
+  }
+  const u = userRows[0];
   res.json({
     user: {
-      id: req.user.id,
-      username: req.user.username,
-      nickname: req.user.nickname,
-      role: req.user.role
+      id: u.id, username: u.username, nickname: u.nickname, role: u.role,
+      nav_layout: u.nav_layout || 'sidebar',
+      last_seen_version: u.last_seen_version || null
     }
   });
+});
+
+// 标记版本已读
+router.put('/seen-version', authenticateToken, async (req, res) => {
+  try {
+    const { version } = req.body;
+    if (!version) return res.status(400).json({ error: '缺少版本号' });
+    await pool.query('UPDATE users SET last_seen_version = ? WHERE id = ?', [version, req.user.id]);
+    res.json({ message: '已标记为已读' });
+  } catch (error) {
+    console.error('标记版本错误:', error);
+    res.status(500).json({ error: '操作失败' });
+  }
+});
+
+// 获取偏好设置
+router.get('/preferences', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT nav_layout FROM users WHERE id = ?', [req.user.id]);
+    res.json({ nav_layout: rows[0]?.nav_layout || 'sidebar' });
+  } catch (error) {
+    res.status(500).json({ error: '获取偏好失败' });
+  }
+});
+
+// 更新偏好设置
+router.put('/preferences', authenticateToken, async (req, res) => {
+  try {
+    const { nav_layout } = req.body;
+    if (nav_layout && !['sidebar', 'topbar'].includes(nav_layout)) {
+      return res.status(400).json({ error: '无效的布局偏好' });
+    }
+    if (nav_layout) {
+      await pool.query('UPDATE users SET nav_layout = ? WHERE id = ?', [nav_layout, req.user.id]);
+    }
+    res.json({ message: '偏好已保存' });
+  } catch (error) {
+    console.error('保存偏好错误:', error);
+    res.status(500).json({ error: '保存偏好失败' });
+  }
 });
 
 module.exports = router;

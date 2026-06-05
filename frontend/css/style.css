@@ -78,6 +78,13 @@ body {
   padding: 0 24px;
 }
 
+/* Full-page main content (replaces .container for main) */
+.main-content {
+  padding: 28px 32px 48px 40px;
+  min-height: 100vh;
+  flex: 1;
+}
+
 /* ---- Typography ---- */
 h1, h2, h3, h4 {
   font-family: var(--font-display);
@@ -343,7 +350,8 @@ a:hover {
 }
 
 /* ---- Main Content ---- */
-main.container {
+main.container,
+.main-content {
   flex: 1;
   padding-top: 36px;
   padding-bottom: 48px;
@@ -1839,7 +1847,8 @@ textarea:focus {
 .floating-collapse-btn {
   position: fixed;
   bottom: 24px;
-  right: 420px;
+  left: 24px;
+  right: auto;
   z-index: 270;
   padding: 10px 18px;
   background: var(--color-forest);
@@ -2231,7 +2240,8 @@ textarea:focus {
   }
 
   .floating-collapse-btn {
-    right: 12px;
+    right: auto;
+    left: 12px;
     bottom: 16px;
   }
 
@@ -2536,6 +2546,367 @@ textarea:focus {
     width: calc(100vw - 16px);
     bottom: 48px;
     left: -4px;
+  }
+}
+
+/* ============================================================
+   Sidebar Navigation
+   ============================================================ */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 150;
+  display: flex;
+}
+
+.sidebar-trigger {
+  width: 10px;
+  height: 100%;
+  flex-shrink: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.sidebar-inner {
+  width: 240px;
+  height: 100%;
+  background: rgba(255, 253, 249, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px;
+  transform: translateX(-100%);
+  transition: transform var(--transition-smooth);
+  overflow-y: auto;
+  box-shadow: 2px 0 24px rgba(26, 31, 28, 0.08);
+}
+
+.sidebar:hover .sidebar-inner,
+.sidebar.open .sidebar-inner {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-border-light);
+  margin-bottom: 16px;
+}
+
+.sidebar-logo {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--color-forest);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.sidebar-nav .nav-tab {
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-stone);
+  background: transparent;
+  text-align: left;
+  transition: all var(--transition-smooth);
+  width: 100%;
+}
+
+.sidebar-nav .nav-tab:hover {
+  color: var(--color-forest);
+  background: var(--color-mist);
+}
+
+.sidebar-nav .nav-tab.active {
+  background: var(--color-forest);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(45, 106, 79, 0.25);
+}
+
+.sidebar-nav .nav-tab-admin {
+  /* admin tabs share the same styles */
+}
+
+.sidebar-user {
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-light);
+  margin-top: auto;
+}
+
+.sidebar-user-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-username {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-style: italic;
+  color: var(--color-forest);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: color var(--transition-fast);
+}
+
+.sidebar-username:hover {
+  color: var(--color-forest-dark);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(26, 31, 28, 0.35);
+  z-index: 140;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.sidebar-overlay.show {
+  display: block;
+}
+
+/* Layout mode: topbar fallback */
+body.layout-topbar .sidebar { display: none; }
+body.layout-topbar .sidebar-overlay { display: none; }
+body.layout-topbar .main-content { margin-left: 0; padding: 28px 24px 48px; }
+body.layout-topbar .fab-publish { display: none; }
+
+/* ============================================================
+   FAB Publish Button
+   ============================================================ */
+.fab-publish {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 130;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-forest);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(45, 106, 79, 0.4);
+  transition: all var(--transition-spring);
+}
+
+.fab-publish:hover {
+  background: var(--color-forest-dark);
+  transform: scale(1.1) translateY(-2px);
+  box-shadow: 0 6px 28px rgba(45, 106, 79, 0.5);
+}
+
+.fab-publish:active {
+  transform: scale(0.95);
+}
+
+.fab-publish svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* ============================================================
+   Personal Center Modal
+   ============================================================ */
+.nav-layout-options {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.nav-layout-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 0.9rem;
+}
+
+.nav-layout-option:hover {
+  border-color: var(--color-sage);
+  background: var(--color-mist);
+}
+
+.nav-layout-option input[type="radio"] {
+  accent-color: var(--color-forest);
+}
+
+.nav-layout-option input:checked + span {
+  color: var(--color-forest);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Update Notification Modal
+   ============================================================ */
+.update-content {
+  margin-bottom: 20px;
+}
+
+.update-info-text {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--color-ink);
+  margin-bottom: 14px;
+  padding: 12px 16px;
+  background: var(--color-mist);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-forest);
+}
+
+.update-features-list {
+  list-style: none;
+  padding: 0;
+}
+
+.update-features-list li {
+  padding: 8px 0 8px 28px;
+  position: relative;
+  font-size: 0.92rem;
+  color: var(--color-stone);
+  line-height: 1.5;
+}
+
+.update-features-list li::before {
+  content: '✦';
+  position: absolute;
+  left: 2px;
+  color: var(--color-forest);
+  font-weight: bold;
+  font-size: 0.75rem;
+  top: 10px;
+}
+
+/* ============================================================
+   Theme Management Admin
+   ============================================================ */
+.theme-admin-input {
+  padding: 8px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-ink);
+  background: var(--color-cream);
+  width: 260px;
+  transition: all var(--transition-fast);
+}
+
+.theme-admin-input:focus {
+  outline: none;
+  border-color: var(--color-sage);
+  box-shadow: var(--shadow-glow);
+  background: white;
+}
+
+.theme-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.theme-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--color-cream);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.theme-list-item:hover {
+  background: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-list-item span {
+  font-size: 0.92rem;
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+/* ============================================================
+   Responsive: Mobile Sidebar
+   ============================================================ */
+@media (max-width: 768px) {
+  .sidebar-trigger {
+    display: none;
+  }
+
+  .sidebar:not(.open) .sidebar-inner {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.open .sidebar-inner {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    padding: 16px 14px 60px 14px;
+  }
+
+  .fab-publish {
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+  }
+
+  .fab-publish svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .sidebar-inner {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+/* ============================================================
+   Responsive: Mobile Publish Modal
+   ============================================================ */
+@media (max-width: 768px) {
+  #publishModal .modal-content,
+  #profileModal .modal-content,
+  #updateModal .modal-content {
+    width: 92vw;
+    margin: 20px auto;
+    padding: 20px 16px;
   }
 }
 

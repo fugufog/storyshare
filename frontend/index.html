@@ -10,72 +10,50 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- 导航栏 -->
-  <nav class="navbar">
-    <div class="container">
-      <div class="nav-left">
-        <a href="/" class="logo">StoryShare</a>
-        <div class="nav-tabs">
-          <button class="nav-tab active" data-tab="story">故事</button>
-          <button class="nav-tab" data-tab="quote">短句</button>
-          <button class="nav-tab" data-tab="album">专辑</button>
-          <button class="nav-tab" data-tab="profile">个人中心</button>
-          <button class="nav-tab nav-tab-admin" data-tab="users" style="display:none;">用户管理</button>
-          <button class="nav-tab nav-tab-admin" data-tab="adminAlbums" style="display:none;">专辑管理</button>
-          <button class="nav-tab nav-tab-admin" data-tab="adminCategories" style="display:none;">分类管理</button>
-        </div>
+  <!-- 侧边栏导航 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-trigger" id="sidebarTrigger"></div>
+    <div class="sidebar-inner" id="sidebarInner">
+      <div class="sidebar-header">
+        <a href="/" class="sidebar-logo">StoryShare</a>
       </div>
-      <button class="hamburger" id="hamburgerBtn" aria-label="菜单">
-        <span></span><span></span><span></span>
-      </button>
-      <div class="nav-right" id="navRight">
-        <span id="userInfo" class="user-info" style="display:none;">
-          <span id="username" class="user-name"></span>
-          <button id="logoutNavBtn" class="btn btn-sm btn-logout-nav" title="退出登录">退出</button>
-        </span>
-        <div id="authButtons">
+      <nav class="sidebar-nav" id="sidebarNav">
+        <button class="nav-tab active" data-tab="story">故事</button>
+        <button class="nav-tab" data-tab="quote">短句</button>
+        <button class="nav-tab" data-tab="album">专辑</button>
+        <button class="nav-tab nav-tab-admin" data-tab="users" style="display:none;">用户管理</button>
+        <button class="nav-tab nav-tab-admin" data-tab="themes" style="display:none;">主题管理</button>
+        <button class="nav-tab nav-tab-admin" data-tab="adminAlbums" style="display:none;">专辑管理</button>
+        <button class="nav-tab nav-tab-admin" data-tab="adminCategories" style="display:none;">分类管理</button>
+      </nav>
+      <div class="sidebar-user" id="sidebarUser">
+        <div id="authButtons" class="sidebar-auth-btns">
           <button id="showLoginBtn" class="btn btn-sm">登录</button>
           <button id="showRegisterBtn" class="btn btn-sm btn-primary">注册</button>
         </div>
+        <span id="userInfo" class="sidebar-user-info" style="display:none;">
+          <span id="username" class="sidebar-username"></span>
+          <button id="logoutNavBtn" class="btn btn-sm btn-logout-nav" title="退出登录">退出</button>
+        </span>
       </div>
     </div>
-  </nav>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <!-- 主内容区 -->
-  <main class="container">
+  <main class="main-content" id="mainContent">
     <!-- 公告栏 -->
     <section id="announcementBoard" class="announcement-board">
       <div class="announcement-header">
         <h2 class="announcement-title">公告栏</h2>
         <div id="announcementAdmin" class="announcement-admin admin-only" style="display:none;">
-          <input type="text" id="newThemeInput" class="theme-input" placeholder="输入今日主题..." maxlength="100">
-          <button id="addThemeBtn" class="btn btn-sm btn-primary">发布主题</button>
+          <input type="text" id="newThemeInput" class="theme-input" placeholder="输入公告内容..." maxlength="100">
+          <button id="addThemeBtn" class="btn btn-sm btn-primary">发布公告</button>
         </div>
       </div>
       <div id="announcementList" class="announcement-list">
         <p class="empty-message">暂无公告</p>
       </div>
-    </section>
-
-    <!-- 发布区域 -->
-    <section id="publishSection" class="publish-section" style="display:none;">
-      <h2>发布新内容</h2>
-      <form id="publishForm">
-        <div class="form-group">
-          <select id="postCategory" class="form-select">
-            <option value="">选择分类</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <select id="postTheme" class="form-select">
-            <option value="">选择主题（可选）</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <textarea id="postContent" placeholder="写下你的故事或短句..." maxlength="500" rows="3"></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">发布</button>
-      </form>
     </section>
 
     <!-- 筛选栏 -->
@@ -214,42 +192,27 @@
       </div>
     </section>
 
-    <!-- 个人中心标签页 -->
-    <section id="profileSection" class="tab-content" style="display:none;">
-      <div class="board">
-        <h2 class="board-title">个人中心</h2>
-
-        <div class="profile-block">
-          <h3>修改昵称</h3>
-          <form id="changeNicknameForm">
-            <div class="form-group">
-              <input type="text" id="newNickname" placeholder="新昵称（1-20个字符）" required>
-            </div>
-            <button type="submit" class="btn btn-primary">确认修改</button>
-          </form>
-        </div>
-
-        <div class="profile-block">
-          <h3>修改密码</h3>
-          <form id="changePasswordForm">
-            <div class="form-group">
-              <input type="password" id="oldPassword" placeholder="当前密码" required>
-            </div>
-            <div class="form-group">
-              <input type="password" id="newPassword" placeholder="新密码（至少6个字符）" required>
-            </div>
-            <button type="submit" class="btn btn-primary">确认修改</button>
-          </form>
-        </div>
-
-      </div>
-    </section>
-
     <!-- 用户管理标签页（管理员） -->
     <section id="usersSection" class="tab-content" style="display:none;">
       <div class="board">
         <h2 class="board-title">用户管理</h2>
         <div id="userManageContent">
+          <p class="loading-text">加载中...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 主题管理标签页（管理员） -->
+    <section id="themesSection" class="tab-content" style="display:none;">
+      <div class="board">
+        <h2 class="board-title">主题管理</h2>
+        <div class="admin-section">
+          <div class="admin-tools">
+            <input type="text" id="themeAdminInput" class="theme-admin-input" placeholder="新主题名称" maxlength="100">
+            <button id="addThemeAdminBtn" class="btn btn-sm btn-primary">添加主题</button>
+          </div>
+        </div>
+        <div id="themeManageContent">
           <p class="loading-text">加载中...</p>
         </div>
       </div>
@@ -272,6 +235,14 @@
       </div>
     </section>
   </main>
+
+  <!-- 浮动发布按钮 -->
+  <button class="fab-publish" id="fabPublishBtn" title="发布新内容">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  </button>
 
   <!-- 登录模态框 -->
   <div id="loginModal" class="modal">
@@ -306,6 +277,86 @@
         <button type="submit" class="btn btn-primary btn-block">注册</button>
       </form>
       <p class="modal-footer">已有账号？<a href="#" id="switchToLogin">立即登录</a></p>
+    </div>
+  </div>
+
+  <!-- 发布模态框 -->
+  <div id="publishModal" class="modal">
+    <div class="modal-content modal-lg">
+      <span class="close">&times;</span>
+      <h2>发布新内容</h2>
+      <form id="publishForm">
+        <div class="form-group">
+          <select id="postCategory" class="form-select">
+            <option value="">选择分类</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <select id="postTheme" class="form-select">
+            <option value="">选择主题（可选）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <textarea id="postContent" placeholder="写下你的故事或短句..." maxlength="500" rows="5" style="min-height:160px;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">发布</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 个人中心模态框 -->
+  <div id="profileModal" class="modal">
+    <div class="modal-content" style="max-width:480px;">
+      <span class="close">&times;</span>
+      <h2>个人中心</h2>
+      <div class="profile-block">
+        <h3>修改昵称</h3>
+        <form id="changeNicknameForm">
+          <div class="form-group">
+            <input type="text" id="newNickname" placeholder="新昵称（1-20个字符）" required>
+          </div>
+          <button type="submit" class="btn btn-primary">确认修改</button>
+        </form>
+      </div>
+      <div class="profile-block" style="margin-top:20px;">
+        <h3>修改密码</h3>
+        <form id="changePasswordForm">
+          <div class="form-group">
+            <input type="password" id="oldPassword" placeholder="当前密码" required>
+          </div>
+          <div class="form-group">
+            <input type="password" id="newPassword" placeholder="新密码（至少6个字符）" required>
+          </div>
+          <button type="submit" class="btn btn-primary">确认修改</button>
+        </form>
+      </div>
+      <div class="profile-block" style="margin-top:20px;">
+        <h3>导航布局</h3>
+        <div class="nav-layout-options">
+          <label class="nav-layout-option">
+            <input type="radio" name="navLayout" value="sidebar" checked>
+            <span>侧边栏导航</span>
+          </label>
+          <label class="nav-layout-option">
+            <input type="radio" name="navLayout" value="topbar">
+            <span>顶部导航</span>
+          </label>
+        </div>
+        <button class="btn btn-sm" id="saveNavLayoutBtn">保存布局偏好</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 版本更新通知模态框 -->
+  <div id="updateModal" class="modal">
+    <div class="modal-content" style="max-width:500px;">
+      <span class="close">&times;</span>
+      <h2>更新通知</h2>
+      <div class="update-content">
+        <p id="updateInfoText" class="update-info-text"></p>
+        <ul id="updateFeaturesList" class="update-features-list"></ul>
+      </div>
+      <button id="dismissUpdateBtn" class="btn btn-primary btn-block">知道了</button>
     </div>
   </div>
 
