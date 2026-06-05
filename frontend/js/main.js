@@ -97,6 +97,24 @@ function init() {
   switchTab(state.activeTab, true);
   bindEvents();
   loadAnnouncements();
+  verifyTokenOnLoad();
+}
+
+function verifyTokenOnLoad() {
+  if (!state.token) return;
+  fetch(API_BASE + '/auth/me', {
+    headers: { 'Authorization': 'Bearer ' + state.token }
+  })
+    .then(function(res) {
+      if (!res.ok) {
+        state.token = null;
+        state.user = null;
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        updateAuthUI();
+      }
+    })
+    .catch(function() {});
 }
 
 function updateAuthUI() {

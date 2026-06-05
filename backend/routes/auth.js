@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db');
-const { JWT_SECRET } = require('../middleware/auth');
+const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -174,6 +174,18 @@ router.put('/nickname', require('../middleware/auth').authenticateToken, async (
     console.error('修改昵称错误:', error);
     res.status(500).json({ error: '昵称修改失败' });
   }
+});
+
+// 验证当前登录状态
+router.get('/me', authenticateToken, async (req, res) => {
+  res.json({
+    user: {
+      id: req.user.id,
+      username: req.user.username,
+      nickname: req.user.nickname,
+      role: req.user.role
+    }
+  });
 });
 
 module.exports = router;
