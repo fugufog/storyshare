@@ -259,7 +259,7 @@
           <input type="text" id="loginUsername" placeholder="用户名" required>
         </div>
         <div class="form-group">
-          <input type="password" id="loginPassword" placeholder="密码" required>
+          <input type="password" id="loginPassword" placeholder="密码" required autocomplete="current-password">
         </div>
         <button type="submit" class="btn btn-primary btn-block">登录</button>
       </form>
@@ -277,7 +277,7 @@
           <input type="text" id="registerUsername" placeholder="用户名（2-20个字符）" required>
         </div>
         <div class="form-group">
-          <input type="password" id="registerPassword" placeholder="密码（至少6个字符）" required>
+          <input type="password" id="registerPassword" placeholder="密码（至少6个字符）" required autocomplete="new-password">
         </div>
         <button type="submit" class="btn btn-primary btn-block">注册</button>
       </form>
@@ -327,10 +327,10 @@
         <h3>修改密码</h3>
         <form id="changePasswordForm">
           <div class="form-group">
-            <input type="password" id="oldPassword" placeholder="当前密码" required>
+            <input type="password" id="oldPassword" placeholder="当前密码" required autocomplete="current-password">
           </div>
           <div class="form-group">
-            <input type="password" id="newPassword" placeholder="新密码（至少6个字符）" required>
+            <input type="password" id="newPassword" placeholder="新密码（至少6个字符）" required autocomplete="new-password">
           </div>
           <button type="submit" class="btn btn-primary">确认修改</button>
         </form>

@@ -188,7 +188,6 @@ function initSidebar() {
   if (mobileTopbarLogo) {
     mobileTopbarLogo.addEventListener('click', toggleMobileSidebar);
   }
-  }
 
   // Overlay click closes sidebar
   elements.sidebarOverlay.addEventListener('click', function() {
