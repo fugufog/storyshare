@@ -2587,7 +2587,7 @@ textarea:focus {
 }
 
 .sidebar-trigger {
-  width: 10px;
+  width: 3px;
   height: 100%;
   flex-shrink: 0;
   cursor: pointer;
