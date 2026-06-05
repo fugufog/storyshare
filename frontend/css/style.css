@@ -83,6 +83,29 @@ body {
   padding: 28px 32px 48px 40px;
   min-height: 100vh;
   flex: 1;
+  margin-left: 0;
+  transition: margin-left var(--transition-smooth);
+}
+
+/* Sidebar push: 侧边栏打开时内容区和固定元素同步右移 */
+.sidebar:hover ~ .main-content,
+.sidebar.open ~ .main-content {
+  margin-left: 240px;
+}
+
+.sidebar:hover ~ .fab-publish,
+.sidebar.open ~ .fab-publish {
+  right: 28px;
+}  /* FAB 不需要移动，它在右侧 */
+
+.sidebar:hover ~ #musicPlayer,
+.sidebar.open ~ #musicPlayer {
+  left: 264px;
+}
+
+.sidebar:hover ~ #floatingCollapseBtn,
+.sidebar.open ~ #floatingCollapseBtn {
+  left: 264px;
 }
 
 /* ---- Typography ---- */
@@ -1850,6 +1873,7 @@ textarea:focus {
   left: 24px;
   right: auto;
   z-index: 270;
+  transition: left var(--transition-smooth), all var(--transition-smooth);
   padding: 10px 18px;
   background: var(--color-forest);
   color: white;
@@ -2336,6 +2360,7 @@ textarea:focus {
   bottom: 24px;
   left: 24px;
   z-index: 280;
+  transition: left var(--transition-smooth);
 }
 
 .music-toggle-btn {
@@ -2689,6 +2714,41 @@ textarea:focus {
   display: block;
 }
 
+/* ============================================================
+   Mobile Topbar (always visible logo on mobile)
+   ============================================================ */
+.mobile-topbar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 145;
+  padding: 12px 16px;
+  background: rgba(255, 253, 249, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--color-border-light);
+  text-align: center;
+}
+
+.mobile-topbar-logo {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--color-forest);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .mobile-topbar {
+    display: block;
+  }
+}
+
 /* Layout mode: topbar fallback */
 body.layout-topbar .sidebar { display: none; }
 body.layout-topbar .sidebar-overlay { display: none; }
@@ -2875,8 +2935,24 @@ body.layout-topbar .fab-publish { display: none; }
     transform: translateX(0);
   }
 
+  /* Mobile: sidebar overlays, don't push content */
+  .sidebar:hover ~ .main-content,
+  .sidebar.open ~ .main-content {
+    margin-left: 0;
+  }
+
+  .sidebar:hover ~ #musicPlayer,
+  .sidebar.open ~ #musicPlayer {
+    left: 24px;
+  }
+
+  .sidebar:hover ~ #floatingCollapseBtn,
+  .sidebar.open ~ #floatingCollapseBtn {
+    left: 24px;
+  }
+
   .main-content {
-    padding: 16px 14px 60px 14px;
+    padding: 60px 14px 60px 14px;  /* top padding for mobile topbar */
   }
 
   .fab-publish {
