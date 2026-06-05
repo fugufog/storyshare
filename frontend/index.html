@@ -22,6 +22,7 @@
           <button class="nav-tab" data-tab="profile">个人中心</button>
           <button class="nav-tab nav-tab-admin" data-tab="users" style="display:none;">用户管理</button>
           <button class="nav-tab nav-tab-admin" data-tab="adminAlbums" style="display:none;">专辑管理</button>
+          <button class="nav-tab nav-tab-admin" data-tab="adminCategories" style="display:none;">分类管理</button>
         </div>
       </div>
       <button class="hamburger" id="hamburgerBtn" aria-label="菜单">
@@ -62,8 +63,7 @@
       <form id="publishForm">
         <div class="form-group">
           <select id="postCategory" class="form-select">
-            <option value="story">故事</option>
-            <option value="quote">短句</option>
+            <option value="">选择分类</option>
           </select>
         </div>
         <div class="form-group">
@@ -254,6 +254,23 @@
         </div>
       </div>
     </section>
+
+    <!-- 分类管理标签页（管理员） -->
+    <section id="adminCategoriesSection" class="tab-content" style="display:none;">
+      <div class="board">
+        <h2 class="board-title">分类管理</h2>
+        <div class="admin-section">
+          <div class="admin-tools">
+            <input type="text" id="newCategoryName" class="form-input" placeholder="分类标识 (如 poem)" maxlength="50" style="width:180px;">
+            <input type="text" id="newCategoryLabel" class="form-input" placeholder="显示名称 (如 诗歌)" maxlength="50" style="width:180px;">
+            <button id="addCategoryBtn" class="btn btn-sm btn-primary">添加分类</button>
+          </div>
+        </div>
+        <div id="categoryManageContent">
+          <p class="loading-text">加载中...</p>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- 登录模态框 -->
@@ -300,8 +317,7 @@
       <form id="editPostForm">
         <div class="form-group">
           <select id="editPostCategory" class="form-select">
-            <option value="story">故事</option>
-            <option value="quote">短句</option>
+            <option value="">选择分类</option>
           </select>
         </div>
         <div class="form-group">

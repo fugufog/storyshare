@@ -108,7 +108,9 @@ router.post('/', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: '内容长度不能超过500个字符' });
     }
 
-    const postCategory = category === 'quote' ? 'quote' : 'story';
+    // 验证分类是否存在，无效分类回退为 story
+    const [validCats] = await pool.query('SELECT name FROM categories WHERE name = ?', [category]);
+    const postCategory = (category && validCats.length > 0) ? category : 'story';
     const postTheme = theme && theme.trim() ? theme.trim() : null;
 
     // 使用昵称作为显示名（如果没有昵称则用用户名）
@@ -166,7 +168,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: '无权编辑此文章' });
     }
 
-    const postCategory = category === 'quote' ? 'quote' : 'story';
+    // 验证分类是否存在，无效分类回退为 story
+    const [validCats] = await pool.query('SELECT name FROM categories WHERE name = ?', [category]);
+    const postCategory = (category && validCats.length > 0) ? category : 'story';
     const postTheme = theme && theme.trim() ? theme.trim() : null;
 
     await pool.query(

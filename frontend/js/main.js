@@ -89,7 +89,15 @@ const elements = {
   commentForm: document.getElementById('commentForm'),
   commentContent: document.getElementById('commentContent'),
   closeCommentPanelBtn: document.getElementById('closeCommentPanelBtn'),
-  floatingCollapseBtn: document.getElementById('floatingCollapseBtn')
+  floatingCollapseBtn: document.getElementById('floatingCollapseBtn'),
+  // Category management
+  adminCategoriesSection: document.getElementById('adminCategoriesSection'),
+  categoryManageContent: document.getElementById('categoryManageContent'),
+  newCategoryName: document.getElementById('newCategoryName'),
+  newCategoryLabel: document.getElementById('newCategoryLabel'),
+  addCategoryBtn: document.getElementById('addCategoryBtn'),
+  postCategory: document.getElementById('postCategory'),
+  editPostCategory: document.getElementById('editPostCategory')
 };
 
 function init() {
@@ -97,6 +105,7 @@ function init() {
   switchTab(state.activeTab, true);
   bindEvents();
   loadAnnouncements();
+  loadCategories();
   verifyTokenOnLoad();
 }
 
@@ -261,6 +270,7 @@ function switchTab(tab, forceReload) {
   elements.profileSection.style.display = tab === 'profile' ? 'block' : 'none';
   elements.usersSection.style.display = tab === 'users' ? 'block' : 'none';
   elements.adminAlbumsSection.style.display = tab === 'adminAlbums' ? 'block' : 'none';
+  elements.adminCategoriesSection.style.display = tab === 'adminCategories' ? 'block' : 'none';
 
   if (tab === 'album') {
     elements.albumListView.style.display = 'block';
@@ -286,6 +296,8 @@ function switchTab(tab, forceReload) {
     loadUserList();
   } else if (tab === 'adminAlbums') {
     loadAdminAlbums();
+  } else if (tab === 'adminCategories') {
+    loadCategories();
   }
 }
 
@@ -327,7 +339,7 @@ function renderPosts(posts, container, category) {
     var isOwner = state.user && state.user.id === post.user_id;
     var isLong = post.content.length > COLLAPSE_THRESHOLD;
     var themeTag = post.theme ? '<span class="post-theme-tag">' + escapeHtml(post.theme) + '</span>' : '';
-    return '<div class="post-item" data-id="' + post.id + '">' +
+    return '<div class="post-item" data-id="' + post.id + '" data-category="' + post.category + '">' +
       '<p class="post-content' + (isLong ? ' collapsed expandable' : '') + '">' + escapeHtml(post.content) + '</p>' +
       (isLong ? '<button class="post-expand-btn">展开</button>' : '') +
       '<div class="post-meta">' +
@@ -402,8 +414,7 @@ function editPost(id) {
   if (!postItem) return;
 
   var content = postItem.querySelector('.post-content').textContent;
-  var container = postItem.closest('.post-list');
-  var category = (container && container.id === 'quoteList') ? 'quote' : 'story';
+  var category = postItem.dataset.category || 'story';
 
   // 读取当前主题标签
   var themeTag = postItem.querySelector('.post-theme-tag');
@@ -576,6 +587,7 @@ function bindEvents() {
       var category = document.getElementById('editPostCategory').value;
 
       if (!content.trim()) { alert('内容不能为空'); return; }
+      if (!category) { alert('请选择分类'); return; }
 
       fetch(API_BASE + '/posts/' + postId, {
         method: 'PUT',
@@ -764,6 +776,7 @@ function bindEvents() {
     var category = document.getElementById('postCategory').value;
 
     if (!content.trim()) { alert('内容不能为空'); return; }
+    if (!category) { alert('请选择分类'); return; }
 
     fetch(API_BASE + '/posts', {
       method: 'POST',
@@ -948,6 +961,16 @@ function bindEvents() {
     e.preventDefault();
     submitComment();
   });
+
+  // === 分类管理事件 ===
+  elements.addCategoryBtn.addEventListener('click', addCategory);
+
+  elements.newCategoryName.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); elements.newCategoryLabel.focus(); }
+  });
+  elements.newCategoryLabel.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); addCategory(); }
+  });
 }
 
 function escapeHtml(text) {
@@ -1044,6 +1067,179 @@ function deleteUser(id, username) {
     .catch(function(error) {
       console.error('删除用户失败:', error);
       alert('删除失败，请重试');
+    });
+}
+
+// ============================================================
+//  分类管理
+// ============================================================
+
+function loadCategories() {
+  fetch(API_BASE + '/categories')
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      populateCategoryDropdowns(data.categories);
+      if (state.activeTab === 'adminCategories') {
+        renderCategoryManagement(data.categories);
+      }
+    })
+    .catch(function(error) {
+      console.error('加载分类失败:', error);
+      if (state.activeTab === 'adminCategories') {
+        elements.categoryManageContent.innerHTML = '<p class="loading-text" style="color:var(--danger-color)">加载失败</p>';
+      }
+    });
+}
+
+function renderCategoryManagement(categories) {
+  var container = elements.categoryManageContent;
+  if (!categories || categories.length === 0) {
+    container.innerHTML = '<p class="empty-message">暂无分类</p>';
+    return;
+  }
+
+  var html = '<div style="margin-bottom:12px;color:var(--text-light);font-size:13px;">共 ' + categories.length + ' 个分类</div>' +
+    '<table class="user-table"><thead><tr>' +
+    '<th>标识</th><th>显示名称</th><th>排序</th><th>内容数</th><th>创建时间</th><th>操作</th>' +
+    '</tr></thead><tbody>';
+
+  categories.forEach(function(cat) {
+    var isDefault = (cat.name === 'story' || cat.name === 'quote');
+    html += '<tr>' +
+      '<td data-label="标识"><code>' + escapeHtml(cat.name) + '</code></td>' +
+      '<td data-label="显示名称">' + escapeHtml(cat.label) + '</td>' +
+      '<td data-label="排序">' + cat.sort_order + '</td>' +
+      '<td data-label="内容数" class="category-post-count" data-category-id="' + cat.id + '">--</td>' +
+      '<td data-label="创建时间">' + formatDate(cat.created_at) + '</td>' +
+      '<td data-label="操作">' +
+        '<button class="btn btn-sm" onclick="editCategory(' + cat.id + ')">编辑</button>' +
+        (isDefault
+          ? '<span style="color:var(--text-light);font-size:12px;margin-left:8px;">默认</span>'
+          : '<button class="btn btn-sm btn-danger" onclick="deleteCategory(' + cat.id + ')">删除</button>') +
+      '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  // 异步加载每个分类的内容数
+  categories.forEach(function(cat) {
+    fetch(API_BASE + '/posts?category=' + encodeURIComponent(cat.name) + '&limit=1')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        var countCell = container.querySelector('.category-post-count[data-category-id="' + cat.id + '"]');
+        if (countCell) countCell.textContent = data.pagination ? data.pagination.total : '0';
+      })
+      .catch(function() {});
+  });
+}
+
+function populateCategoryDropdowns(categories) {
+  if (!categories || !categories.length) return;
+  var optionsHtml = categories.map(function(cat) {
+    return '<option value="' + escapeHtml(cat.name) + '">' + escapeHtml(cat.label) + '</option>';
+  }).join('');
+
+  var publishCat = document.getElementById('postCategory');
+  if (publishCat) {
+    publishCat.innerHTML = '<option value="">选择分类</option>' + optionsHtml;
+  }
+  var editCat = document.getElementById('editPostCategory');
+  if (editCat) {
+    editCat.innerHTML = '<option value="">选择分类</option>' + optionsHtml;
+  }
+
+  // 保持当前选中的 tab 对应的分类
+  if (state.activeTab === 'story' || state.activeTab === 'quote') {
+    var sel = document.getElementById('postCategory');
+    if (sel) sel.value = state.activeTab;
+  }
+}
+
+function addCategory() {
+  var name = elements.newCategoryName.value.trim();
+  var label = elements.newCategoryLabel.value.trim();
+
+  if (!name) { alert('请输入分类标识'); return; }
+  if (!label) { alert('请输入显示名称'); return; }
+  if (!/^[a-z][a-z0-9_]*$/.test(name)) {
+    alert('分类标识只能包含小写字母、数字和下划线，且必须以字母开头');
+    return;
+  }
+
+  fetch(API_BASE + '/categories', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + state.token
+    },
+    body: JSON.stringify({ name: name, label: label })
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        elements.newCategoryName.value = '';
+        elements.newCategoryLabel.value = '';
+        loadCategories();
+        alert('分类添加成功！');
+      } else {
+        alert(data.error || '添加失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('添加分类失败:', error);
+      alert('添加失败，请重试');
+    });
+}
+
+function editCategory(id) {
+  var newLabel = prompt('新的显示名称:');
+  if (!newLabel) return;
+
+  fetch(API_BASE + '/categories/' + id, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + state.token
+    },
+    body: JSON.stringify({ label: newLabel.trim() })
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        loadCategories();
+        alert('分类更新成功！');
+      } else {
+        alert(data.error || '更新失败');
+      }
+    })
+    .catch(function(error) {
+      console.error('更新分类失败:', error);
+      alert('更新失败，请重试');
+    });
+}
+
+function deleteCategory(id) {
+  if (!confirm('确定要删除此分类吗？如果该分类下有内容，将无法删除。')) return;
+
+  fetch(API_BASE + '/categories/' + id, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + state.token }
+  })
+    .then(function(res) {
+      if (!res.ok) {
+        return res.json().then(function(err) { throw new Error(err.error || '删除失败'); });
+      }
+      return res.json();
+    })
+    .then(function(data) {
+      alert(data.message || '删除成功');
+      loadCategories();
+    })
+    .catch(function(error) {
+      alert(error.message);
+      loadCategories();
     });
 }
 

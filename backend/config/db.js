@@ -60,6 +60,30 @@ async function initDB() {
       // 列已存在，忽略
     }
 
+    // 迁移：category 从 ENUM 改为 VARCHAR 以支持动态分类
+    try {
+      await connection.query("ALTER TABLE posts MODIFY COLUMN category VARCHAR(50) DEFAULT 'story'");
+    } catch (e) {
+      // 已修改，忽略
+    }
+
+    // 创建分类表
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(50) NOT NULL UNIQUE,
+        label VARCHAR(50) NOT NULL,
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 种子默认分类
+    await connection.query(
+      'INSERT IGNORE INTO categories (name, label, sort_order) VALUES (?, ?, ?), (?, ?, ?)',
+      ['story', '故事', 0, 'quote', '短句', 1]
+    );
+
     // 创建公告表
     await connection.query(`
       CREATE TABLE IF NOT EXISTS announcements (
