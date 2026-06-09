@@ -158,11 +158,20 @@ function initSidebar() {
 
   function isMobile() { return window.innerWidth <= 768; }
 
-  // PC: hover trigger zone opens sidebar
+  // PC: hover trigger zone opens sidebar (200ms delay to prevent accidental trigger)
   var trigger = document.getElementById('sidebarTrigger');
+  var hoverTimer = null;
   if (trigger) {
     trigger.addEventListener('mouseenter', function() {
-      if (!isMobile()) sidebar.classList.add('open');
+      if (!isMobile()) {
+        clearTimeout(hoverTimer);
+        hoverTimer = setTimeout(function() {
+          sidebar.classList.add('open');
+        }, 200);
+      }
+    });
+    trigger.addEventListener('mouseleave', function() {
+      clearTimeout(hoverTimer);
     });
   }
 

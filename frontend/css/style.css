@@ -2587,11 +2587,14 @@ textarea:focus {
 }
 
 .sidebar-trigger {
-  width: 3px;
-  height: 100%;
+  width: 24px;
+  height: 200px;
   flex-shrink: 0;
   cursor: pointer;
   z-index: 2;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .sidebar-inner {
