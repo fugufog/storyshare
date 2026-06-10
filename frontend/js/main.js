@@ -158,25 +158,43 @@ function initSidebar() {
 
   function isMobile() { return window.innerWidth <= 768; }
 
-  // PC: hover trigger zone opens sidebar (200ms delay to prevent accidental trigger)
-  var trigger = document.getElementById('sidebarTrigger');
   var hoverTimer = null;
-  if (trigger) {
-    trigger.addEventListener('mouseenter', function() {
-      if (!isMobile()) {
+  var sidebarOpen = false;
+
+  // Track open state from class changes (mobile toggle may change it too)
+  function updateOpenState() {
+    sidebarOpen = sidebar.classList.contains('open');
+  }
+
+  // PC: mousemove detects mouse at left edge of screen → open sidebar
+  document.addEventListener('mousemove', function(e) {
+    if (isMobile()) return;
+
+    if (e.clientX <= 5) {
+      if (!sidebarOpen) {
         clearTimeout(hoverTimer);
         hoverTimer = setTimeout(function() {
           sidebar.classList.add('open');
+          sidebarOpen = true;
         }, 200);
       }
-    });
-    trigger.addEventListener('mouseleave', function() {
+    } else {
       clearTimeout(hoverTimer);
-    });
-  }
+    }
+  });
+
+  sidebar.addEventListener('mouseenter', function() {
+    if (!isMobile()) {
+      sidebarOpen = true;
+      clearTimeout(hoverTimer);
+    }
+  });
 
   sidebar.addEventListener('mouseleave', function() {
-    if (!isMobile()) sidebar.classList.remove('open');
+    if (!isMobile()) {
+      sidebar.classList.remove('open');
+      sidebarOpen = false;
+    }
   });
 
   // Mobile: click logo (sidebar or topbar) toggles sidebar
@@ -188,6 +206,7 @@ function initSidebar() {
       e.preventDefault();
       sidebar.classList.toggle('open');
       elements.sidebarOverlay.classList.toggle('show');
+      updateOpenState();
     }
   }
 
@@ -202,6 +221,7 @@ function initSidebar() {
   elements.sidebarOverlay.addEventListener('click', function() {
     sidebar.classList.remove('open');
     elements.sidebarOverlay.classList.remove('show');
+    sidebarOpen = false;
   });
 
   // Close sidebar on mobile after tab select
@@ -211,6 +231,7 @@ function initSidebar() {
       if (isMobile()) {
         sidebar.classList.remove('open');
         elements.sidebarOverlay.classList.remove('show');
+        sidebarOpen = false;
       }
     });
   });
