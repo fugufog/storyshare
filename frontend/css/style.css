@@ -2587,7 +2587,7 @@ textarea:focus {
 }
 
 .sidebar-trigger {
-  width: 8px;
+  width: 25px;
   height: 100vh;
   flex-shrink: 0;
   cursor: pointer;
@@ -2595,6 +2595,7 @@ textarea:focus {
   position: absolute;
   top: 0;
   left: 0;
+  background: linear-gradient(to right, rgba(45, 106, 79, 0.03), transparent);
 }
 
 .sidebar-inner {

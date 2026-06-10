@@ -166,18 +166,25 @@ function initSidebar() {
     sidebarOpen = sidebar.classList.contains('open');
   }
 
-  // PC: mousemove detects mouse at left edge of screen → open sidebar
+  // PC: mousemove detects mouse approaching left edge → open sidebar
+  var APPROACH_THRESHOLD = 25; // px from left edge to trigger
+  var CLOSE_MARGIN = 60;       // px from left edge before closing
   document.addEventListener('mousemove', function(e) {
     if (isMobile()) return;
 
-    if (e.clientX <= 5) {
+    if (e.clientX <= APPROACH_THRESHOLD) {
       if (!sidebarOpen) {
         clearTimeout(hoverTimer);
         hoverTimer = setTimeout(function() {
           sidebar.classList.add('open');
           sidebarOpen = true;
-        }, 200);
+        }, 50);
       }
+    } else if (e.clientX > CLOSE_MARGIN && sidebarOpen && !sidebar.matches(':hover')) {
+      // Only close when cursor moves well past the approach zone
+      clearTimeout(hoverTimer);
+      sidebar.classList.remove('open');
+      sidebarOpen = false;
     } else {
       clearTimeout(hoverTimer);
     }
@@ -190,8 +197,10 @@ function initSidebar() {
     }
   });
 
-  sidebar.addEventListener('mouseleave', function() {
+  sidebar.addEventListener('mouseleave', function(e) {
     if (!isMobile()) {
+      // Don't close if cursor is still near the left edge
+      if (e.clientX <= CLOSE_MARGIN) return;
       sidebar.classList.remove('open');
       sidebarOpen = false;
     }
