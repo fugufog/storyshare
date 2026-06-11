@@ -167,12 +167,13 @@ function initSidebar() {
   }
 
   // PC: mousemove detects mouse approaching left edge → open sidebar
-  var APPROACH_THRESHOLD = 25; // px from left edge to trigger
-  var CLOSE_MARGIN = 60;       // px from left edge before closing
+  // Thresholds are 5% of viewport width — adapts to any screen size
   document.addEventListener('mousemove', function(e) {
     if (isMobile()) return;
 
-    if (e.clientX <= APPROACH_THRESHOLD) {
+    var threshold = window.innerWidth * 0.05;
+
+    if (e.clientX <= threshold) {
       if (!sidebarOpen) {
         clearTimeout(hoverTimer);
         hoverTimer = setTimeout(function() {
@@ -180,8 +181,7 @@ function initSidebar() {
           sidebarOpen = true;
         }, 50);
       }
-    } else if (e.clientX > CLOSE_MARGIN && sidebarOpen && !sidebar.matches(':hover')) {
-      // Only close when cursor moves well past the approach zone
+    } else if (e.clientX > threshold && sidebarOpen && !sidebar.matches(':hover')) {
       clearTimeout(hoverTimer);
       sidebar.classList.remove('open');
       sidebarOpen = false;
@@ -199,8 +199,8 @@ function initSidebar() {
 
   sidebar.addEventListener('mouseleave', function(e) {
     if (!isMobile()) {
-      // Don't close if cursor is still near the left edge
-      if (e.clientX <= CLOSE_MARGIN) return;
+      // Don't close if cursor is still near the left edge (within 5% viewport)
+      if (e.clientX <= window.innerWidth * 0.05) return;
       sidebar.classList.remove('open');
       sidebarOpen = false;
     }
