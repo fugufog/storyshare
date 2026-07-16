@@ -2611,12 +2611,10 @@ textarea:focus {
   width: 8px;
   height: 100vh;
   flex-shrink: 0;
-  cursor: pointer;
   z-index: 2;
   position: absolute;
   top: 0;
   left: 0;
-  pointer-events: auto;
 }
 
 .sidebar-inner {
