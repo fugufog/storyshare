@@ -2600,12 +2600,15 @@ textarea:focus {
   height: 100vh;
   z-index: 150;
   display: flex;
+  pointer-events: none;
+}
+
+.sidebar.open {
+  pointer-events: auto;
 }
 
 .sidebar-trigger {
-  width: 5vw;
-  min-width: 20px;
-  max-width: 80px;
+  width: 8px;
   height: 100vh;
   flex-shrink: 0;
   cursor: pointer;
@@ -2613,7 +2616,7 @@ textarea:focus {
   position: absolute;
   top: 0;
   left: 0;
-  background: linear-gradient(to right, rgba(45, 106, 79, 0.03), transparent);
+  pointer-events: auto;
 }
 
 .sidebar-inner {

@@ -171,7 +171,7 @@ function initSidebar() {
   document.addEventListener('mousemove', function(e) {
     if (isMobile()) return;
 
-    var threshold = window.innerWidth * 0.05;
+    var threshold = 8;
 
     if (e.clientX <= threshold) {
       if (!sidebarOpen) {
@@ -200,7 +200,7 @@ function initSidebar() {
   sidebar.addEventListener('mouseleave', function(e) {
     if (!isMobile()) {
       // Don't close if cursor is still near the left edge (within 5% viewport)
-      if (e.clientX <= window.innerWidth * 0.05) return;
+      if (e.clientX <= 8) return;
       sidebar.classList.remove('open');
       sidebarOpen = false;
     }
