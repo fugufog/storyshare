@@ -156,94 +156,66 @@ function initSidebar() {
   var sidebar = elements.sidebar;
   if (!sidebar) return;
 
+  var toggleLabel = document.getElementById('sidebarToggleLabel');
+
   function isMobile() { return window.innerWidth <= 768; }
 
-  var hoverTimer = null;
-  var sidebarOpen = false;
-
-  // Track open state from class changes (mobile toggle may change it too)
-  function updateOpenState() {
-    sidebarOpen = sidebar.classList.contains('open');
+  function openSidebar() {
+    sidebar.classList.add('open');
+    elements.sidebarOverlay.classList.add('show');
+    document.body.classList.add('sidebar-open');
   }
 
-  // PC: mousemove detects mouse approaching left edge → open sidebar
-  // Thresholds are 5% of viewport width — adapts to any screen size
-  document.addEventListener('mousemove', function(e) {
-    if (isMobile()) return;
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    elements.sidebarOverlay.classList.remove('show');
+    document.body.classList.remove('sidebar-open');
+  }
 
-    var threshold = 8;
-
-    if (e.clientX <= threshold) {
-      if (!sidebarOpen) {
-        clearTimeout(hoverTimer);
-        hoverTimer = setTimeout(function() {
-          sidebar.classList.add('open');
-          sidebarOpen = true;
-        }, 50);
-      }
-    } else if (e.clientX > threshold && sidebarOpen && !sidebar.matches(':hover')) {
-      clearTimeout(hoverTimer);
-      sidebar.classList.remove('open');
-      sidebarOpen = false;
+  function toggleSidebar(e) {
+    e.preventDefault();
+    if (sidebar.classList.contains('open')) {
+      closeSidebar();
     } else {
-      clearTimeout(hoverTimer);
+      openSidebar();
     }
+  }
+
+  // Click toggle label to open/close sidebar
+  if (toggleLabel) {
+    toggleLabel.addEventListener('click', toggleSidebar);
+  }
+
+  // Click overlay to close sidebar
+  elements.sidebarOverlay.addEventListener('click', function() {
+    closeSidebar();
   });
 
-  sidebar.addEventListener('mouseenter', function() {
-    if (!isMobile()) {
-      sidebarOpen = true;
-      clearTimeout(hoverTimer);
-    }
+  // Close sidebar after selecting a tab (all devices)
+  var navTabs = sidebar.querySelectorAll('.nav-tab');
+  navTabs.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      closeSidebar();
+    });
   });
 
-  sidebar.addEventListener('mouseleave', function(e) {
-    if (!isMobile()) {
-      // Don't close if cursor is still near the left edge (within 5% viewport)
-      if (e.clientX <= 8) return;
-      sidebar.classList.remove('open');
-      sidebarOpen = false;
-    }
-  });
-
-  // Mobile: click logo (sidebar or topbar) toggles sidebar
+  // Mobile: also allow clicking sidebar logo or topbar logo to toggle
   var sidebarLogo = sidebar.querySelector('.sidebar-logo');
   var mobileTopbarLogo = document.querySelector('.mobile-topbar-logo');
 
-  function toggleMobileSidebar(e) {
+  function handleMobileToggle(e) {
     if (isMobile()) {
       e.preventDefault();
-      sidebar.classList.toggle('open');
-      elements.sidebarOverlay.classList.toggle('show');
-      updateOpenState();
+      toggleSidebar(e);
     }
   }
 
   if (sidebarLogo) {
-    sidebarLogo.addEventListener('click', toggleMobileSidebar);
+    sidebarLogo.addEventListener('click', handleMobileToggle);
   }
   if (mobileTopbarLogo) {
-    mobileTopbarLogo.addEventListener('click', toggleMobileSidebar);
+    mobileTopbarLogo.addEventListener('click', handleMobileToggle);
   }
-
-  // Overlay click closes sidebar
-  elements.sidebarOverlay.addEventListener('click', function() {
-    sidebar.classList.remove('open');
-    elements.sidebarOverlay.classList.remove('show');
-    sidebarOpen = false;
-  });
-
-  // Close sidebar on mobile after tab select
-  var navTabs = sidebar.querySelectorAll('.nav-tab');
-  navTabs.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      if (isMobile()) {
-        sidebar.classList.remove('open');
-        elements.sidebarOverlay.classList.remove('show');
-        sidebarOpen = false;
-      }
-    });
-  });
 }
 
 function applyNavLayout() {

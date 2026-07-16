@@ -2593,6 +2593,37 @@ textarea:focus {
 /* ============================================================
    Sidebar Navigation
    ============================================================ */
+.sidebar-toggle-label {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 149;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--color-forest);
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: -0.02em;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--transition-fast);
+  background: rgba(255, 253, 249, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.sidebar-toggle-label:hover {
+  opacity: 0.75;
+}
+
+/* Toggle-label hidden when sidebar is open (via body class) */
+body.sidebar-open .sidebar-toggle-label {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .sidebar {
   position: fixed;
   top: 0;
@@ -2608,13 +2639,7 @@ textarea:focus {
 }
 
 .sidebar-trigger {
-  width: 8px;
-  height: 100vh;
-  flex-shrink: 0;
-  z-index: 2;
-  position: absolute;
-  top: 0;
-  left: 0;
+  display: none;
 }
 
 .sidebar-inner {
