@@ -137,6 +137,14 @@ function deleteUser(id) {
   });
 }
 
+function resetPassword(id, newPassword) {
+  return request({
+    url: '/admin/users/' + id + '/reset-password',
+    method: 'PUT',
+    data: { newPassword }
+  });
+}
+
 module.exports = {
   login,
   register,
@@ -150,5 +158,6 @@ module.exports = {
   createAnnouncement,
   deleteAnnouncement,
   getUsers,
+  resetPassword,
   deleteUser
 };

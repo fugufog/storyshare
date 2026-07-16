@@ -2,3 +2,12 @@
 page {
   padding-bottom: 40rpx;
 }
+
+.reset-pwd-btn {
+  background-color: #07c160;
+  color: #fff;
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+  font-size: 24rpx;
+  display: inline-block;
+}

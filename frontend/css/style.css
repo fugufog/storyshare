@@ -831,6 +831,22 @@ textarea:focus {
   cursor: not-allowed;
 }
 
+.reset-pwd-btn {
+  background: #4a90d9;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: var(--font-body);
+  transition: all var(--transition-fast);
+}
+
+.reset-pwd-btn:hover {
+  opacity: 0.85;
+}
+
 /* ---- Modal ---- */
 .modal {
   display: none;

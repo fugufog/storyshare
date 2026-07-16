@@ -1225,10 +1225,14 @@ function renderUserList(users) {
       '<td data-label="角色"><span class="user-badge ' + (isAdmin ? 'user-badge-admin' : 'user-badge-user') + '">' + (isAdmin ? '管理员' : '用户') + '</span></td>' +
       '<td data-label="文章数">' + user.post_count + '</td>' +
       '<td data-label="注册时间">' + formatDate(user.created_at) + '</td>' +
-      '<td data-label="操作">' + (canDel
-        ? '<button class="delete-user-btn" onclick="deleteUser(' + user.id + ', \'' + escapeHtml(user.username) + '\')">删除用户</button>'
-        : '<span style="color:var(--text-light);font-size:12px;">' + (isSelf ? '当前账号' : '不可删除') + '</span>') +
-      '</td>' +
+      '<td data-label="操作" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'
+        + (canDel
+          ? '<button class="delete-user-btn" onclick="deleteUser(' + user.id + ', \'' + escapeHtml(user.username) + '\')">删除用户</button>'
+          : '<span style="color:var(--text-light);font-size:12px;">' + (isSelf ? '当前账号' : '不可删除') + '</span>')
+        + (!isSelf
+          ? '<button class="reset-pwd-btn" onclick="resetUserPassword(' + user.id + ', \'' + escapeHtml(user.username) + '\')">重置密码</button>'
+          : '')
+        + '</td>' +
       '</tr>';
   });
 
@@ -1255,6 +1259,31 @@ function deleteUser(id, username) {
     .catch(function(error) {
       console.error('删除用户失败:', error);
       alert('删除失败，请重试');
+    });
+}
+
+function resetUserPassword(id, username) {
+  var pwd = prompt('请输入用户「' + username + '」的新密码（至少6位）：');
+  if (!pwd) return;
+  if (pwd.length < 6) {
+    alert('密码长度至少6个字符');
+    return;
+  }
+  fetch(API_BASE + '/admin/users/' + id + '/reset-password', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + state.token
+    },
+    body: JSON.stringify({ newPassword: pwd })
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      alert(data.message || data.error || '重置失败');
+    })
+    .catch(function(error) {
+      console.error('重置密码失败:', error);
+      alert('重置密码失败，请重试');
     });
 }
 

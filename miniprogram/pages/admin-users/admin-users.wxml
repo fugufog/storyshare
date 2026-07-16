@@ -32,17 +32,11 @@
           </text>
         </text>
         <text class="col-count">{{item.post_count}}</text>
-        <view class="col-action">
-          <text
-            wx:if="{{item.canDelete}}"
-            class="delete-user-btn"
-            bindtap="onDeleteUser"
-            data-id="{{item.id}}"
-            data-username="{{item.username}}"
-          >删除</text>
-          <text wx:else style="color:var(--color-stone);font-size:22rpx;">
-            {{item.id === currentUserId ? '当前账号' : '不可删除'}}
-          </text>
+        <view class="col-action" style="flex-direction:row;gap:8rpx;">
+          <text wx:if="{{item.canDelete}}" class="delete-user-btn" bindtap="onDeleteUser" data-id="{{item.id}}" data-username="{{item.username}}">删除</text>
+          <text wx:elif="{{item.id === currentUserId}}" style="color:var(--color-stone);font-size:22rpx;">当前账号</text>
+          <text wx:else style="color:var(--color-stone);font-size:22rpx;">不可删除</text>
+          <text wx:if="{{item.id !== currentUserId}}" class="reset-pwd-btn" bindtap="onResetPassword" data-id="{{item.id}}" data-username="{{item.username}}">重置密码</text>
         </view>
       </view>
     </block>

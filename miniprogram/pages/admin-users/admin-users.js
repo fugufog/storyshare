@@ -60,5 +60,34 @@ Page({
         }
       }
     });
+  },
+
+  onResetPassword(e) {
+    const id = e.currentTarget.dataset.id;
+    const username = e.currentTarget.dataset.username;
+    wx.showModal({
+      title: '重置密码',
+      content: '请输入用户「' + username + '」的新密码（至少6位）：',
+      editable: true,
+      placeholderText: '输入新密码',
+      success: res => {
+        if (res.confirm) {
+          const pwd = res.content;
+          if (!pwd || pwd.length < 6) {
+            wx.showToast({ title: '密码至少6个字符', icon: 'none' });
+            return;
+          }
+          api.resetPassword(id, pwd).then(data => {
+            if (data.message) {
+              wx.showToast({ title: data.message, icon: 'success' });
+            } else {
+              wx.showToast({ title: data.error || '重置失败', icon: 'none' });
+            }
+          }).catch(err => {
+            wx.showToast({ title: err.message || '重置失败', icon: 'none' });
+          });
+        }
+      }
+    });
   }
 });
