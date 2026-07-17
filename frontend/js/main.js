@@ -119,7 +119,6 @@ function init() {
   updateAuthUI();
   switchTab(state.activeTab, true);
   bindEvents();
-  loadAnnouncements();
   loadCategories();
   loadThemes();
   verifyTokenOnLoad();
@@ -248,109 +247,6 @@ function updateAuthUI() {
     document.querySelectorAll('.nav-tab-admin').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
   }
-}
-
-function loadAnnouncements() {
-  fetch(API_BASE + '/announcements')
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      renderAnnouncements(data.announcements);
-    })
-    .catch(function(error) {
-      console.error('加载公告失败:', error);
-    });
-}
-
-function renderAnnouncements(announcements) {
-  if (!announcements || announcements.length === 0) {
-    elements.announcementList.innerHTML = '<p class="empty-message">暂无公告</p>';
-    return;
-  }
-
-  var isAdmin = state.user && state.user.role === 'admin';
-
-  elements.announcementList.innerHTML = announcements.map(function(a) {
-    return '<div class="announcement-item">' +
-      '<span class="announcement-theme">' + escapeHtml(a.theme) + '</span>' +
-      '<span class="announcement-date">' + formatDate(a.created_at) + '</span>' +
-      (isAdmin ? '<button class="announcement-delete-btn" onclick="deleteAnnouncement(' + a.id + ')">&times;</button>' : '') +
-    '</div>';
-  }).join('');
-}
-
-function updateThemeSelects(announcements) {
-  var themeNames = [];
-  if (announcements) {
-    var seen = {};
-    announcements.forEach(function(a) {
-      if (!seen[a.theme]) {
-        seen[a.theme] = true;
-        themeNames.push(a.theme);
-      }
-    });
-  }
-
-  var optionsHtml = '<option value="">选择主题（可选）</option>' +
-    themeNames.map(function(t) { return '<option value="' + escapeHtml(t) + '">' + escapeHtml(t) + '</option>'; }).join('');
-
-  elements.postTheme.innerHTML = optionsHtml;
-  elements.editPostTheme.innerHTML = optionsHtml;
-  // 同步更新筛选栏的主题下拉
-  var filterOptions = '<option value="">全部主题</option>' +
-    themeNames.map(function(t) { return '<option value="' + escapeHtml(t) + '">' + escapeHtml(t) + '</option>'; }).join('');
-  // 保留当前选中值
-  var currentFilter = elements.filterTheme.value;
-  elements.filterTheme.innerHTML = filterOptions;
-  elements.filterTheme.value = currentFilter;
-}
-
-function createAnnouncement() {
-  var theme = elements.newThemeInput.value.trim();
-  if (!theme) { alert('请输入主题'); return; }
-
-  fetch(API_BASE + '/announcements', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + state.token
-    },
-    body: JSON.stringify({ theme: theme })
-  })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      if (data.message) {
-        elements.newThemeInput.value = '';
-        loadAnnouncements();
-        alert('公告发布成功！');
-      } else {
-        alert(data.error || '发布失败');
-      }
-    })
-    .catch(function(error) {
-      console.error('发布公告失败:', error);
-      alert('发布失败，请重试');
-    });
-}
-
-function deleteAnnouncement(id) {
-  if (!confirm('确定要删除这条公告吗？')) return;
-
-  fetch(API_BASE + '/announcements/' + id, {
-    method: 'DELETE',
-    headers: { 'Authorization': 'Bearer ' + state.token }
-  })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      if (data.message) {
-        loadAnnouncements();
-      } else {
-        alert(data.error || '删除失败');
-      }
-    })
-    .catch(function(error) {
-      console.error('删除公告失败:', error);
-      alert('删除失败，请重试');
-    });
 }
 
 function switchTab(tab, forceReload) {
@@ -616,17 +512,6 @@ function bindEvents() {
     });
   });
 
-  // 公告 - 发布主题
-  elements.addThemeBtn.addEventListener('click', createAnnouncement);
-
-  // 公告 - 回车发布
-  elements.newThemeInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      createAnnouncement();
-    }
-  });
-
   // 筛选
   elements.applyFilterBtn.addEventListener('click', function() {
     state.filter.theme = elements.filterTheme.value;
@@ -832,7 +717,6 @@ function bindEvents() {
           applyNavLayout();
           loadThemes();
           switchTab('story', true);
-          loadAnnouncements();
           // 显示版本更新通知
           if (data.version && data.version.has_update) {
             state.currentVersion = data.version.current;

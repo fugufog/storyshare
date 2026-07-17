@@ -1,2 +1,2 @@
 [permissions]
-allow = ["explore", "Edit"]
+allow = ["explore", "Edit", "Bash(sed -n:*)", "Bash(sed -i:*)", "Bash(node --check \"I:/myweb/storyshare/frontend/js/main.js\" 2>&1)"]
